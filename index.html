@@ -58,7 +58,15 @@
       margin-bottom: 12px;
     }
 
-    h1 { font-size: 1.2rem; margin: 0; }
+    h1 { font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+    .store-badge {
+      background: #0066cc;
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: normal;
+    }
 
     .nav-buttons { display: flex; gap: 6px; }
     .btn-nav {
@@ -228,12 +236,11 @@
     .view-section { display: block; }
     .view-section.hidden { display: none; }
 
-    /* 通信中ローディングオーバーレイ */
     #loading-overlay {
       display: flex;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.85);
       z-index: 2000;
       justify-content: center;
       align-items: center;
@@ -277,9 +284,8 @@
 </head>
 <body>
 
-<!-- 通信中ローディング表示 -->
 <div id="loading-overlay">
-  <div>データを読み込み中...</div>
+  <div id="loading-msg">通信中...</div>
 </div>
 
 <div class="container">
@@ -289,7 +295,7 @@
   <!-- 入力画面 -->
   <div id="input-view" class="view-section">
     <div class="header-bar">
-      <h1>金庫引継記録</h1>
+      <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
       <div class="nav-buttons">
         <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
         <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
@@ -311,11 +317,7 @@
       <div class="section-title">【1】金庫内現金実査</div>
       <table>
         <thead>
-          <tr>
-            <th>金種</th>
-            <th>区分 / 数量</th>
-            <th>金額</th>
-          </tr>
+          <tr><th>金種</th><th>区分 / 数量</th><th>金額</th></tr>
         </thead>
         <tbody>
           <tr>
@@ -395,7 +397,6 @@
     <!-- 2. 各レジ過不足状況エリア -->
     <div class="section-card">
       <div class="section-title">【2】各レジ過不足状況</div>
-
       <!-- 1レジ -->
       <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
         <div class="info-grid">
@@ -465,12 +466,10 @@
       <h1>シフト別アーカイブ閲覧</h1>
       <button class="btn-nav" onclick="showView('input-view')">入力画面へ戻る</button>
     </div>
-
     <div class="field-group" style="margin-bottom: 12px;">
       <label for="archive-date">閲覧日付を選択</label>
       <input type="date" id="archive-date" onchange="renderArchiveShifts()">
     </div>
-
     <div id="shift-container"></div>
   </div>
 
@@ -480,17 +479,10 @@
       <h1>直近6ヶ月 スタッフ別過不足集計</h1>
       <button class="btn-nav" onclick="showView('input-view')">入力画面へ戻る</button>
     </div>
-
     <p style="font-size:0.85rem; color:#666; margin-top:0;">※過去6ヶ月で発生した「ミス金額（絶対値）」の合計額と回数を集計しています。</p>
-
     <table class="summary-table">
       <thead>
-        <tr>
-          <th>スタッフ名</th>
-          <th>過剰(+)<br>発生回数/金額</th>
-          <th>不足(-)<br>発生回数/金額</th>
-          <th>通算ミス額<br>(絶対値合計)</th>
-        </tr>
+        <tr><th>スタッフ名</th><th>過剰(+)<br>発生回数/金額</th><th>不足(-)<br>発生回数/金額</th><th>通算ミス額<br>(絶対値合計)</th></tr>
       </thead>
       <tbody id="summary-table-body"></tbody>
     </table>
@@ -499,28 +491,31 @@
   <!-- マスタ設定画面 -->
   <div id="master-view" class="view-section hidden">
     <div class="header-bar">
-      <h1>マスタ設定 ＆ スタッフ管理</h1>
+      <h1>マスタ設定 ＆ 店舗設定</h1>
       <button class="btn-nav" onclick="showView('input-view')">入力画面へ戻る</button>
     </div>
 
     <div class="section-card">
-      <div class="section-title">金庫標準設定</div>
+      <div class="section-title">自端末の所属店舗設定</div>
       <div class="field-group" style="margin-bottom: 8px;">
-        <label for="master-target">金庫設定金額</label>
+        <label for="master-store-select">所属店舗を選択</label>
+        <select id="master-store-select" onchange="onMasterStoreChanged()"></select>
+      </div>
+      <div class="field-group" style="margin-bottom: 8px;">
+        <label for="new-store-name">新規店舗を追加する場合</label>
+        <input type="text" id="new-store-name" placeholder="新しい店舗名を入力">
+      </div>
+      <div class="field-group" style="margin-bottom: 8px;">
+        <label for="master-target">この店舗の金庫設定金額</label>
         <input type="text" id="master-target" class="numpad-input" value="200,000円" readonly onclick="openNumpad('master-target', '金庫設定金額', false)">
       </div>
-      <button class="btn-main btn-submit" style="width: 100%;" onclick="saveMasterSettings()">設定金額を保存</button>
+      <button class="btn-main btn-submit" style="width: 100%;" onclick="saveStoreMasterSettings()">店舗・設定金額を確定保存</button>
     </div>
 
     <div class="section-card">
-      <div class="section-title">登録スタッフ管理（退職者削除）</div>
+      <div class="section-title"><span id="staff-master-store-label"></span> スタッフ管理</div>
       <table class="summary-table">
-        <thead>
-          <tr>
-            <th>スタッフ名</th>
-            <th>操作</th>
-          </tr>
-        </thead>
+        <thead><tr><th>スタッフ名</th><th>操作</th></tr></thead>
         <tbody id="staff-master-body"></tbody>
       </table>
     </div>
@@ -528,7 +523,7 @@
 
 </div>
 
-<!-- モーダル各種 -->
+<!-- テンキーモーダル -->
 <div class="modal-overlay" id="numpad-modal" style="align-items: flex-end;">
   <div class="numpad-modal">
     <div class="numpad-title" id="numpad-title">金額入力</div>
@@ -564,8 +559,7 @@
     <h3 style="margin-top:0;" id="help-title">過不足の考え方</h3>
     <div style="font-size: 0.9rem; line-height: 1.5; color: #444; margin-bottom: 16px;">
       <p><strong>【計算式】</strong><br>
-      <code>実査枚数（実際にドロア内にある枚数）</code><br>
-      − <code>伝票枚数（レジで処理された理論上の枚数）</code></p>
+      <code>実査枚数（実際にドロア内にある枚数）</code> − <code>伝票枚数（レジで処理された理論上の枚数）</code></p>
       <ul>
         <li><strong>＋（プラス）：</strong> 伝票に対して実際の回収券が<strong>多い</strong>状態。</li>
         <li><strong>−（マイナス）：</strong> 伝票に対して実際の回収券が<strong>不足している</strong>状態。</li>
@@ -576,13 +570,17 @@
 </div>
 
 <script>
+  // ★ Step 2 でコピーしたGASのWebアプリURLを貼り付けてください
+  const GAS_API_URL = 'ここにGASのWebアプリURLを入力';
+
+  let currentStoreName = localStorage.getItem('kinko_selected_store') || '1号店';
   let targetVaultAmount = 200000;
   let currentTargetInputId = '';
   let allowNegativeInput = true;
 
-  // グローバル保持データ（スプレッドシートより同期）
   let globalRecords = [];
   let globalStaffList = [];
+  let globalStoreList = [];
 
   document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
@@ -591,39 +589,53 @@
     document.getElementById('archive-date').value = now.toISOString().slice(0, 10);
 
     initDropdowns();
-    
-    // スプレッドシートから初期データ一括取得
-    fetchInitialData();
+    fetchData();
   });
 
-  function showLoading(msg = 'データを処理中...') {
+  function showLoading(msg = '通信中...') {
     const el = document.getElementById('loading-overlay');
-    el.querySelector('div').textContent = msg;
+    document.getElementById('loading-msg').textContent = msg;
     el.style.display = 'flex';
   }
+  function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
 
-  function hideLoading() {
-    document.getElementById('loading-overlay').style.display = 'none';
+  async function callGASApi(payload) {
+    const res = await fetch(GAS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    return await res.json();
   }
 
-  function fetchInitialData() {
+  async function fetchData() {
     showLoading('スプレッドシートからデータ取得中...');
-    google.script.run
-      .withSuccessHandler(data => {
-        globalRecords = data.records || [];
+    try {
+      const data = await callGASApi({ action: 'getInitialData', storeName: currentStoreName });
+      if (data.status === 'success') {
+        globalStoreList = data.storeList || [];
         globalStaffList = data.staffList || [];
+        globalRecords = data.records || [];
         targetVaultAmount = data.targetVaultAmount || 200000;
 
-        updateMasterDisplay();
+        updateStoreUI();
         renderStaffDatalist();
         calculate();
-        hideLoading();
-      })
-      .withFailureHandler(err => {
-        hideLoading();
-        alert('データ取得エラー: ' + err.message);
-      })
-      .getInitialData();
+      } else {
+        alert('取得エラー: ' + data.message);
+      }
+    } catch (err) {
+      alert('通信エラー: ' + err.message);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  function updateStoreUI() {
+    document.getElementById('current-store-badge').textContent = currentStoreName;
+    document.getElementById('target-amount-disp').textContent = targetVaultAmount.toLocaleString();
+    document.getElementById('master-target').value = targetVaultAmount.toLocaleString() + '円';
+    document.getElementById('staff-master-store-label').textContent = `【${currentStoreName}】`;
   }
 
   function renderStaffDatalist() {
@@ -671,14 +683,12 @@
 
   function calculate() {
     let total = 0;
-
     document.querySelectorAll('.select-count').forEach(select => {
       const unit = parseInt(select.getAttribute('data-unit'), 10);
       const type = select.getAttribute('data-type');
       const count = parseInt(select.value, 10) || 0;
       const multiplier = (type === 'roll') ? 50 : 1;
       const subtotal = unit * multiplier * count;
-
       select.closest('tr').querySelector('.subtotal').textContent = subtotal.toLocaleString();
       total += subtotal;
     });
@@ -694,12 +704,7 @@
     const diffAmountEl = document.getElementById('diff-amount');
 
     diffAmountEl.textContent = (diff > 0 ? '+' : '') + diff.toLocaleString();
-
-    if (diff === 0) {
-      diffContainer.className = 'summary-row diff highlight-ok';
-    } else {
-      diffContainer.className = 'summary-row diff highlight-ng';
-    }
+    diffContainer.className = diff === 0 ? 'summary-row diff highlight-ok' : 'summary-row diff highlight-ng';
 
     updateHighlights();
   }
@@ -709,42 +714,34 @@
       const el = document.getElementById(id);
       const val = parseInt(el.value.replace(/[^0-9-]/g, ''), 10) || 0;
       if (val !== 0) {
-        el.classList.add('highlight-ng');
-        el.classList.remove('highlight-ok');
+        el.classList.add('highlight-ng'); el.classList.remove('highlight-ok');
       } else {
-        el.classList.add('highlight-ok');
-        el.classList.remove('highlight-ng');
+        el.classList.add('highlight-ok'); el.classList.remove('highlight-ng');
       }
     });
 
     document.querySelectorAll('.coupon-select').forEach(el => {
       const val = parseInt(el.value, 10) || 0;
       if (val !== 0) {
-        el.classList.add('highlight-ng');
-        el.classList.remove('highlight-ok');
+        el.classList.add('highlight-ng'); el.classList.remove('highlight-ok');
       } else {
-        el.classList.add('highlight-ok');
-        el.classList.remove('highlight-ng');
+        el.classList.add('highlight-ok'); el.classList.remove('highlight-ng');
       }
     });
   }
 
   function checkStaffAlert(staffName) {
     if (!staffName) return;
-
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
     const records3M = globalRecords.filter(r => new Date(r.datetime) >= threeMonthsAgo);
 
     let totalAbsDiff3M = 0;
-
     records3M.forEach(r => {
       [r.reg1, r.reg2].forEach(reg => {
         if (reg && reg.staff === staffName) {
           const val = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
-          if (val !== 0) {
-            totalAbsDiff3M += Math.abs(val);
-          }
+          if (val !== 0) totalAbsDiff3M += Math.abs(val);
         }
       });
     });
@@ -767,7 +764,7 @@
     const staff2 = document.getElementById('reg2-staff').value;
     const currentStaffs = [staff1, staff2].filter(Boolean);
 
-    let summaryHtml = '<strong>【直近1ヶ月 スタッフ別個人実績・過不足記録】</strong><br>';
+    let summaryHtml = `<strong>【直近1ヶ月 ${currentStoreName} 個人実績・過不足記録】</strong><br>`;
     
     if (currentStaffs.length === 0) {
       summaryHtml += '・担当者未指定<br>';
@@ -783,7 +780,6 @@
             if (reg && reg.staff === name) {
               const cashVal = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
               if (cashVal !== 0) { cashMissCount++; cashAbsSum += Math.abs(cashVal); }
-
               freeCouponAbsSum += Math.abs(parseInt(reg.freeCouponDiff, 10) || 0);
               discCouponAbsSum += Math.abs(parseInt(reg.discCouponDiff, 10) || 0);
             }
@@ -821,7 +817,7 @@
     }
   }
 
-  function submitAndPrint() {
+  async function submitAndPrint() {
     const staff1 = document.getElementById('reg1-staff').value;
     const staff2 = document.getElementById('reg2-staff').value;
 
@@ -832,6 +828,7 @@
 
     const record = {
       datetime: document.getElementById('datetime').value,
+      storeName: currentStoreName,
       reg1: {
         staff: staff1,
         cashDiff: document.getElementById('reg1-diff').value,
@@ -850,10 +847,10 @@
       memo: document.getElementById('memo').value
     };
 
-    showLoading('スプレッドシートに記録保存中...');
-
-    google.script.run
-      .withSuccessHandler(() => {
+    showLoading('スプレッドシートに保存中...');
+    try {
+      const res = await callGASApi({ action: 'saveRecord', record: record });
+      if (res.status === 'success') {
         globalRecords.push(record);
         if (staff1 && !globalStaffList.includes(staff1)) globalStaffList.push(staff1);
         if (staff2 && !globalStaffList.includes(staff2)) globalStaffList.push(staff2);
@@ -862,12 +859,14 @@
         preparePrintSummary();
         hideLoading();
         window.print();
-      })
-      .withFailureHandler(err => {
-        hideLoading();
-        alert('保存エラー: ' + err.message);
-      })
-      .saveRecordToSheet(record);
+      } else {
+        alert('保存失敗: ' + res.message);
+      }
+    } catch (err) {
+      alert('通信エラー: ' + err.message);
+    } finally {
+      hideLoading();
+    }
   }
 
   function showArchiveView() {
@@ -880,7 +879,6 @@
     if (!selectedDateStr) return;
 
     const dayRecords = globalRecords.filter(r => r.datetime.startsWith(selectedDateStr));
-
     const shifts = [
       { name: '朝勤 (8:00 〜 13:00)', start: 8, end: 13 },
       { name: '昼勤 (13:00 〜 17:00)', start: 13, end: 17 },
@@ -895,14 +893,9 @@
     shifts.forEach(s => {
       const card = document.createElement('div');
       card.className = 'shift-card';
-
       const matchedRecords = dayRecords.filter(r => {
         const hour = new Date(r.datetime).getHours();
-        if (s.start < s.end) {
-          return hour >= s.start && hour < s.end;
-        } else {
-          return hour >= s.start || hour < s.end;
-        }
+        return s.start < s.end ? (hour >= s.start && hour < s.end) : (hour >= s.start || hour < s.end);
       });
 
       let contentHtml = '';
@@ -922,7 +915,6 @@
           `;
         });
       }
-
       card.innerHTML = `<div class="shift-title"><span>${s.name}</span> <span>件数: ${matchedRecords.length}</span></div>${contentHtml}`;
       container.appendChild(card);
     });
@@ -934,24 +926,14 @@
     const records = globalRecords.filter(r => new Date(r.datetime) >= sixMonthsAgo);
 
     const stats = {};
-
     records.forEach(r => {
       [r.reg1, r.reg2].forEach(reg => {
         if (reg && reg.staff) {
           const name = reg.staff;
           const val = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
-
-          if (!stats[name]) {
-            stats[name] = { plusCount: 0, plusSum: 0, minusCount: 0, minusSum: 0, totalAbs: 0 };
-          }
-
-          if (val > 0) {
-            stats[name].plusCount++;
-            stats[name].plusSum += val;
-          } else if (val < 0) {
-            stats[name].minusCount++;
-            stats[name].minusSum += val;
-          }
+          if (!stats[name]) stats[name] = { plusCount: 0, plusSum: 0, minusCount: 0, minusSum: 0, totalAbs: 0 };
+          if (val > 0) { stats[name].plusCount++; stats[name].plusSum += val; }
+          else if (val < 0) { stats[name].minusCount++; stats[name].minusSum += val; }
           stats[name].totalAbs += Math.abs(val);
         }
       });
@@ -959,7 +941,6 @@
 
     const tbody = document.getElementById('summary-table-body');
     tbody.innerHTML = '';
-
     if (Object.keys(stats).length === 0) {
       tbody.innerHTML = '<tr><td colspan="4">直近6ヶ月の記録はありません。</td></tr>';
     } else {
@@ -970,31 +951,76 @@
           <td style="font-weight:bold;">${name}</td>
           <td>${s.plusCount}回<br>(+${s.plusSum.toLocaleString()}円)</td>
           <td>${s.minusCount}回<br>(${s.minusSum.toLocaleString()}円)</td>
-          <td style="font-weight:bold; color:#cc0000;">
-            ${s.totalAbs.toLocaleString()}円
-          </td>
+          <td style="font-weight:bold; color:#cc0000;">${s.totalAbs.toLocaleString()}円</td>
         `;
         tbody.appendChild(tr);
       });
     }
-
     showView('summary-view');
   }
 
   function showMasterView() {
     showView('master-view');
+    renderMasterStoreSelect();
     renderStaffMaster();
+  }
+
+  function renderMasterStoreSelect() {
+    const select = document.getElementById('master-store-select');
+    select.innerHTML = '';
+    globalStoreList.forEach(s => {
+      const opt = new Option(s.name, s.name);
+      if (s.name === currentStoreName) opt.selected = true;
+      select.options.add(opt);
+    });
+  }
+
+  function onMasterStoreChanged() {
+    const selected = document.getElementById('master-store-select').value;
+    const storeObj = globalStoreList.find(s => s.name === selected);
+    if (storeObj) {
+      document.getElementById('master-target').value = storeObj.target.toLocaleString() + '円';
+    }
+  }
+
+  async function saveStoreMasterSettings() {
+    const newStore = document.getElementById('new-store-name').value.trim();
+    const selectStore = document.getElementById('master-store-select').value;
+    const targetStore = newStore || selectStore || '1号店';
+    const rawVal = document.getElementById('master-target').value.replace(/[^0-9]/g, '');
+    const targetAmt = parseInt(rawVal, 10) || 200000;
+
+    showLoading('店舗設定を保存中...');
+    try {
+      const res = await callGASApi({
+        action: 'saveStoreSettings',
+        storeName: targetStore,
+        targetVaultAmount: targetAmt
+      });
+      if (res.status === 'success') {
+        currentStoreName = targetStore;
+        localStorage.setItem('kinko_selected_store', currentStoreName);
+        document.getElementById('new-store-name').value = '';
+        await fetchData();
+        alert(`所属店舗を「${targetStore}」に設定しました。`);
+        showView('input-view');
+      } else {
+        alert('保存エラー: ' + res.message);
+      }
+    } catch (err) {
+      alert('通信エラー: ' + err.message);
+    } finally {
+      hideLoading();
+    }
   }
 
   function renderStaffMaster() {
     const tbody = document.getElementById('staff-master-body');
     tbody.innerHTML = '';
-
     if (globalStaffList.length === 0) {
       tbody.innerHTML = '<tr><td colspan="2">登録スタッフはいません。</td></tr>';
       return;
     }
-
     globalStaffList.forEach(name => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -1005,52 +1031,29 @@
     });
   }
 
-  function deleteStaff(name) {
-    if (confirm(`「${name}」スタッフをリストから削除（退職処理）しますか？`)) {
-      showLoading('スタッフデータ削除中...');
-      google.script.run
-        .withSuccessHandler(() => {
+  async function deleteStaff(name) {
+    if (confirm(`【${currentStoreName}】から「${name}」スタッフを削除しますか？`)) {
+      showLoading('スタッフ削除中...');
+      try {
+        const res = await callGASApi({ action: 'deleteStaff', storeName: currentStoreName, staffName: name });
+        if (res.status === 'success') {
           globalStaffList = globalStaffList.filter(n => n !== name);
           renderStaffDatalist();
           renderStaffMaster();
-          hideLoading();
-        })
-        .withFailureHandler(err => {
-          hideLoading();
-          alert('削除エラー: ' + err.message);
-        })
-        .deleteStaffFromSheet(name);
+        } else {
+          alert('削除エラー: ' + res.message);
+        }
+      } catch (err) {
+        alert('通信エラー: ' + err.message);
+      } finally {
+        hideLoading();
+      }
     }
   }
 
   function showView(viewId) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
     document.getElementById(viewId).classList.remove('hidden');
-  }
-
-  function saveMasterSettings() {
-    const rawVal = document.getElementById('master-target').value.replace(/[^0-9]/g, '');
-    targetVaultAmount = parseInt(rawVal, 10) || 0;
-
-    showLoading('設定金額を保存中...');
-    google.script.run
-      .withSuccessHandler(() => {
-        updateMasterDisplay();
-        calculate();
-        hideLoading();
-        alert('マスタ設定を保存しました。');
-        showView('input-view');
-      })
-      .withFailureHandler(err => {
-        hideLoading();
-        alert('設定保存エラー: ' + err.message);
-      })
-      .saveVaultTargetToProperties(targetVaultAmount);
-  }
-
-  function updateMasterDisplay() {
-    document.getElementById('target-amount-disp').textContent = targetVaultAmount.toLocaleString();
-    document.getElementById('master-target').value = targetVaultAmount.toLocaleString() + '円';
   }
 
   function openHelpModal(title) {
