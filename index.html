@@ -54,7 +54,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    /* ★ A4サイズ1枚に収めるための専用コンテナ設定 (幅794pxベースの比率) */
     #export-area {
       background: #fff;
       padding: 12px;
@@ -128,7 +127,6 @@
     input[type="datetime-local"],
     input[type="date"],
     input[type="text"],
-    input[type="number"],
     select,
     textarea {
       padding: 5px 8px;
@@ -303,7 +301,6 @@
   <!-- 入力画面 -->
   <div id="input-view" class="view-section">
     
-    <!-- ★ A4サイズ1枚に最適化したエクスポートエリア -->
     <div id="export-area">
       <div class="header-bar">
         <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
@@ -333,57 +330,57 @@
           <tbody>
             <tr>
               <td class="label-col">10,000円札</td>
-              <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">5,000円札</td>
-              <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">2,000円札</td>
-              <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">1,000円札</td>
-              <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">500円玉 (10枚単位)</td>
-              <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">100円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="100" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="roll" data-unit="100" id="roll-100" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">50円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="50" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="roll" data-unit="50" id="roll-50" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">10円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="10" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="roll" data-unit="10" id="roll-10" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">5円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="5" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="roll" data-unit="5" id="roll-5" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">1円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="1" onchange="calculate()"></select></td>
+              <td><select class="select-count" data-type="roll" data-unit="1" id="roll-1" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span class="subtotal">0</span> 円</td>
             </tr>
             <tr>
               <td class="label-col">硬貨バラ（各種）</td>
-              <td><select id="loose-coins" onchange="calculate()"></select></td>
+              <td><select id="loose-coins" onchange="saveFormState(); calculate();"></select></td>
               <td class="num-col"><span id="loose-subtotal">0</span> 円</td>
             </tr>
           </tbody>
@@ -405,20 +402,6 @@
         </div>
       </div>
 
-      <!-- 1.5 各アイテム在庫数エリア -->
-      <div class="section-card">
-        <div class="section-title">
-          <span>【1.5】アイテム在庫数確認</span>
-          <button class="btn-small" onclick="saveStockData()">在庫数保存</button>
-        </div>
-        <table>
-          <thead>
-            <tr><th>アイテム名</th><th>現在の在庫数</th></tr>
-          </thead>
-          <tbody id="stock-table-body"></tbody>
-        </table>
-      </div>
-
       <!-- 2. 各レジ過不足状況エリア -->
       <div class="section-card">
         <div class="section-title">【2】各レジ過不足状況</div>
@@ -428,7 +411,7 @@
           <div class="info-grid">
             <div class="field-group">
               <label for="reg1-staff">1レジ担当者</label>
-              <select id="reg1-staff" onchange="checkStaffAlert(this.value)"></select>
+              <select id="reg1-staff" onchange="saveFormState(); checkStaffAlert(this.value);"></select>
             </div>
             <div class="field-group">
               <label for="reg1-diff">現金過不足</label>
@@ -447,11 +430,11 @@
           <div class="coupon-grid">
             <div class="field-group">
               <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-              <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+              <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
             </div>
             <div class="field-group">
               <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-              <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+              <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
             </div>
           </div>
         </div>
@@ -461,7 +444,7 @@
           <div class="info-grid">
             <div class="field-group">
               <label for="reg2-staff">2レジ担当者</label>
-              <select id="reg2-staff" onchange="checkStaffAlert(this.value)"></select>
+              <select id="reg2-staff" onchange="saveFormState(); checkStaffAlert(this.value);"></select>
             </div>
             <div class="field-group">
               <label for="reg2-diff">現金過不足</label>
@@ -480,11 +463,11 @@
           <div class="coupon-grid">
             <div class="field-group">
               <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-              <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+              <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
             </div>
             <div class="field-group">
               <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-              <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+              <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
             </div>
           </div>
         </div>
@@ -493,7 +476,7 @@
       <!-- 備考 -->
       <div class="field-group full" style="margin-bottom: 4px;">
         <label for="memo">備考 / 引継ぎ事項</label>
-        <textarea id="memo" rows="2" placeholder="過不足の理由など"></textarea>
+        <textarea id="memo" rows="2" placeholder="過不足の理由など" oninput="saveFormState()"></textarea>
       </div>
 
       <div id="export-report-container" class="export-report-box"></div>
@@ -625,9 +608,6 @@
   let globalRecords = [];
   let globalStaffList = [];
   let globalStoreList = [];
-  let globalStockList = [];
-
-  const defaultItems = ['両替用1万円札', '両替用千円札', 'レシートロール紙', '受領印インクパッド'];
 
   document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
@@ -666,12 +646,13 @@
         globalStoreList = data.storeList || [];
         globalStaffList = data.staffList || [];
         globalRecords = data.records || [];
-        globalStockList = data.stockList || [];
         targetVaultAmount = data.targetVaultAmount || 200000;
 
         updateStoreUI();
         renderStaffDropdowns();
-        renderStockTable();
+        
+        // フォーム状態の復元
+        loadFormState();
         calculate();
       } else {
         alert('取得エラー: ' + data.message);
@@ -726,49 +707,9 @@
         document.getElementById(targetSelectId).value = name;
         inputEl.value = '';
         inputEl.closest('details').open = false;
+        saveFormState();
       } else {
         alert('追加エラー: ' + res.message);
-      }
-    } catch (err) {
-      alert('通信エラー: ' + err.message);
-    } finally {
-      hideLoading();
-    }
-  }
-
-  function renderStockTable() {
-    const tbody = document.getElementById('stock-table-body');
-    tbody.innerHTML = '';
-
-    defaultItems.forEach(itemName => {
-      const found = globalStockList.find(s => s.itemName === itemName);
-      const qty = found ? found.quantity : 0;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="label-col">${itemName}</td>
-        <td><input type="number" class="stock-qty-input" data-item="${itemName}" value="${qty}" style="text-align:right; padding:3px 6px;"></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  async function saveStockData() {
-    const stocks = [];
-    document.querySelectorAll('.stock-qty-input').forEach(input => {
-      stocks.push({
-        itemName: input.getAttribute('data-item'),
-        quantity: parseInt(input.value, 10) || 0
-      });
-    });
-
-    showLoading('在庫数を保存中...');
-    try {
-      const res = await callGASApi({ action: 'saveStock', storeName: currentStoreName, stocks: stocks });
-      if (res.status === 'success') {
-        alert('在庫数をスプレッドシートに保存しました。');
-      } else {
-        alert('在庫保存エラー: ' + res.message);
       }
     } catch (err) {
       alert('通信エラー: ' + err.message);
@@ -808,6 +749,66 @@
       }
       select.value = 0;
     });
+  }
+
+  // 入力状態をブラウザに自動保存（ローカルストレージ）
+  function saveFormState() {
+    const state = {
+      'bill-10000': document.getElementById('bill-10000').value,
+      'bill-5000': document.getElementById('bill-5000').value,
+      'bill-2000': document.getElementById('bill-2000').value,
+      'bill-1000': document.getElementById('bill-1000').value,
+      'coin-500': document.getElementById('coin-500').value,
+      'roll-100': document.querySelectorAll('select[data-type="roll"]')[0].value,
+      'roll-50': document.querySelectorAll('select[data-type="roll"]')[1].value,
+      'roll-10': document.querySelectorAll('select[data-type="roll"]')[2].value,
+      'roll-5': document.querySelectorAll('select[data-type="roll"]')[3].value,
+      'roll-1': document.querySelectorAll('select[data-type="roll"]')[4].value,
+      'loose-coins': document.getElementById('loose-coins').value,
+      'reg1-staff': document.getElementById('reg1-staff').value,
+      'reg1-diff': document.getElementById('reg1-diff').value,
+      'reg1-free-coupon': document.getElementById('reg1-free-coupon').value,
+      'reg1-disc-coupon': document.getElementById('reg1-disc-coupon').value,
+      'reg2-staff': document.getElementById('reg2-staff').value,
+      'reg2-diff': document.getElementById('reg2-diff').value,
+      'reg2-free-coupon': document.getElementById('reg2-free-coupon').value,
+      'reg2-disc-coupon': document.getElementById('reg2-disc-coupon').value,
+      'memo': document.getElementById('memo').value
+    };
+    localStorage.setItem('kinko_form_state_' + currentStoreName, JSON.stringify(state));
+  }
+
+  // 保存された入力状態を復元
+  function loadFormState() {
+    const saved = localStorage.getItem('kinko_form_state_' + currentStoreName);
+    if (!saved) return;
+    try {
+      const state = JSON.parse(saved);
+      if (state['bill-10000']) document.getElementById('bill-10000').value = state['bill-10000'];
+      if (state['bill-5000']) document.getElementById('bill-5000').value = state['bill-5000'];
+      if (state['bill-2000']) document.getElementById('bill-2000').value = state['bill-2000'];
+      if (state['bill-1000']) document.getElementById('bill-1000').value = state['bill-1000'];
+      if (state['coin-500']) document.getElementById('coin-500').value = state['coin-500'];
+      const rolls = document.querySelectorAll('select[data-type="roll"]');
+      if (state['roll-100']) rolls[0].value = state['roll-100'];
+      if (state['roll-50']) rolls[1].value = state['roll-50'];
+      if (state['roll-10']) rolls[2].value = state['roll-10'];
+      if (state['roll-5']) rolls[3].value = state['roll-5'];
+      if (state['roll-1']) rolls[4].value = state['roll-1'];
+      if (state['loose-coins']) document.getElementById('loose-coins').value = state['loose-coins'];
+      if (state['reg1-staff']) document.getElementById('reg1-staff').value = state['reg1-staff'];
+      if (state['reg1-diff']) document.getElementById('reg1-diff').value = state['reg1-diff'];
+      if (state['reg1-free-coupon']) document.getElementById('reg1-free-coupon').value = state['reg1-free-coupon'];
+      if (state['reg1-disc-coupon']) document.getElementById('reg1-disc-coupon').value = state['reg1-disc-coupon'];
+      if (state['reg2-staff']) document.getElementById('reg2-staff').value = state['reg2-staff'];
+      if (state['reg2-diff']) document.getElementById('reg2-diff').value = state['reg2-diff'];
+      if (state['reg2-free-coupon']) document.getElementById('reg2-free-coupon').value = state['reg2-free-coupon'];
+      if (state['reg2-disc-coupon']) document.getElementById('reg2-disc-coupon').value = state['reg2-disc-coupon'];
+      if (state['memo']) document.getElementById('memo').value = state['memo'];
+      updateHighlights();
+    } catch (e) {
+      console.error('State load error', e);
+    }
   }
 
   function calculate() {
@@ -942,6 +943,7 @@
       document.getElementById('reg2-diff').value = '0円';
       document.querySelectorAll('.coupon-select').forEach(s => s.value = 0);
       document.getElementById('memo').value = '';
+      saveFormState();
       updateHighlights();
     }
   }
@@ -992,10 +994,10 @@
 
       const exportTarget = document.getElementById('export-area');
       const canvas = await html2canvas(exportTarget, {
-        scale: 2, // 高解像度レンダリング
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        width: 794 // A4縦サイズ（96dpi換算のピクセル幅）に固定して綺麗に一枚化
+        width: 794
       });
 
       canvas.toBlob(async (blob) => {
@@ -1259,6 +1261,7 @@
     const rawVal = parseInt(document.getElementById('numpad-display').textContent, 10) || 0;
     document.getElementById(currentTargetInputId).value = rawVal.toLocaleString() + '円';
     document.getElementById('numpad-modal').style.display = 'none';
+    saveFormState();
     updateHighlights();
   }
 </script>
