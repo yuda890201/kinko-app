@@ -54,9 +54,12 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
+    /* ★ A4サイズ1枚に収めるための専用コンテナ設定 (幅794pxベースの比率) */
     #export-area {
       background: #fff;
-      padding: 4px;
+      padding: 12px;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     .header-bar {
@@ -64,11 +67,11 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid var(--border-color);
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
     }
 
-    h1 { font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+    h1 { font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 8px; }
     .store-badge {
       background: #0066cc;
       color: #fff;
@@ -92,16 +95,16 @@
     .section-card {
       border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 12px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
       background-color: #fff;
     }
 
     .section-title {
       font-weight: bold;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
-      padding-bottom: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      padding-bottom: 2px;
       border-bottom: 1px dashed #bbb;
       display: flex;
       justify-content: space-between;
@@ -113,9 +116,9 @@
     .field-group.full { grid-column: span 2; }
 
     label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: bold;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       color: #444;
       display: flex;
       align-items: center;
@@ -128,8 +131,8 @@
     input[type="number"],
     select,
     textarea {
-      padding: 6px 8px;
-      font-size: 0.95rem;
+      padding: 5px 8px;
+      font-size: 0.9rem;
       border: 1px solid #ccc;
       border-radius: 4px;
       box-sizing: border-box;
@@ -155,40 +158,39 @@
       border-color: #ccc !important;
     }
 
-    .coupon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .coupon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
     .help-icon {
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       background-color: #0066cc;
       color: #fff;
       border-radius: 50%;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       cursor: pointer;
     }
 
-    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-    th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: center; }
-    th { background-color: #f2f2f2; font-size: 0.8rem; }
-    td.label-col { background-color: #fafafa; font-weight: bold; text-align: left; font-size: 0.85rem; width: 35%; }
-    td.num-col { text-align: right; width: 35%; font-size: 0.9rem; }
-    select.select-count { text-align: right; font-size: 0.9rem; padding: 2px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+    th, td { border: 1px solid #ccc; padding: 3px 6px; text-align: center; }
+    th { background-color: #f2f2f2; font-size: 0.78rem; }
+    td.label-col { background-color: #fafafa; font-weight: bold; text-align: left; font-size: 0.8rem; width: 35%; }
+    td.num-col { text-align: right; width: 35%; font-size: 0.85rem; }
+    select.select-count { text-align: right; font-size: 0.85rem; padding: 2px; }
 
-    .summary-card { border: 2px solid var(--border-color); border-radius: 6px; padding: 8px; margin-bottom: 4px; }
-    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; font-size: 0.9rem; }
-    .summary-row.total { font-weight: bold; font-size: 1.1rem; border-bottom: 1px dashed #ccc; padding-bottom: 4px; margin-bottom: 4px; }
-    .summary-row.diff { font-weight: bold; font-size: 1.05rem; padding: 4px; border-radius: 4px; margin-top: 4px; }
+    .summary-card { border: 2px solid var(--border-color); border-radius: 6px; padding: 6px 8px; margin-bottom: 2px; }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; font-size: 0.85rem; }
+    .summary-row.total { font-weight: bold; font-size: 1rem; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 3px; }
+    .summary-row.diff { font-weight: bold; font-size: 0.95rem; padding: 3px; border-radius: 4px; margin-top: 3px; }
 
-    /* 折りたたみエリア（スタッフ新規登録） */
     details.staff-accordion {
       background: #fdfdfd;
       border: 1px dashed #0066cc;
       border-radius: 4px;
-      padding: 6px 10px;
-      margin-top: 6px;
-      font-size: 0.85rem;
+      padding: 4px 8px;
+      margin-top: 4px;
+      font-size: 0.8rem;
     }
     details.staff-accordion summary {
       cursor: pointer;
@@ -200,16 +202,16 @@
       border: 1px solid #0066cc;
       background: #f0f7ff;
       border-radius: 6px;
-      padding: 8px 12px;
-      margin-top: 10px;
-      font-size: 0.85rem;
-      line-height: 1.5;
+      padding: 8px 10px;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
     }
     .export-notice {
       color: #cc0000;
       font-weight: bold;
-      margin-top: 4px;
-      font-size: 0.78rem;
+      margin-top: 3px;
+      font-size: 0.72rem;
     }
 
     .btn-group { display: flex; gap: 8px; margin-top: 12px; }
@@ -225,7 +227,7 @@
     .btn-submit { background-color: var(--primary-color); color: #fff; }
     .btn-reset { background-color: #e0e0e0; color: #333; }
     .btn-danger { background-color: #dc3545; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
-    .btn-small { padding: 4px 8px; font-size: 0.8rem; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-small { padding: 3px 6px; font-size: 0.75rem; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
     .summary-table { width: 100%; margin-top: 10px; font-size: 0.85rem; }
     .summary-table th { background: #e9ecef; }
@@ -301,6 +303,7 @@
   <!-- 入力画面 -->
   <div id="input-view" class="view-section">
     
+    <!-- ★ A4サイズ1枚に最適化したエクスポートエリア -->
     <div id="export-area">
       <div class="header-bar">
         <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
@@ -412,9 +415,7 @@
           <thead>
             <tr><th>アイテム名</th><th>現在の在庫数</th></tr>
           </thead>
-          <tbody id="stock-table-body">
-            <!-- 動的生成 -->
-          </tbody>
+          <tbody id="stock-table-body"></tbody>
         </table>
       </div>
 
@@ -423,7 +424,7 @@
         <div class="section-title">【2】各レジ過不足状況</div>
         
         <!-- 1レジ -->
-        <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
+        <div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #ccc;">
           <div class="info-grid">
             <div class="field-group">
               <label for="reg1-staff">1レジ担当者</label>
@@ -435,10 +436,9 @@
             </div>
           </div>
 
-          <!-- スタッフ新規登録（折りたたみ式） -->
           <details class="staff-accordion">
             <summary>+ リストにないスタッフを新規登録する</summary>
-            <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
               <input type="text" id="quick-new-staff-1" placeholder="スタッフ名を入力">
               <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-1', 'reg1-staff')">追加</button>
             </div>
@@ -469,10 +469,9 @@
             </div>
           </div>
 
-          <!-- スタッフ新規登録（折りたたみ式） -->
           <details class="staff-accordion">
             <summary>+ リストにないスタッフを新規登録する</summary>
-            <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
               <input type="text" id="quick-new-staff-2" placeholder="スタッフ名を入力">
               <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-2', 'reg2-staff')">追加</button>
             </div>
@@ -492,7 +491,7 @@
       </div>
 
       <!-- 備考 -->
-      <div class="field-group full" style="margin-bottom: 8px;">
+      <div class="field-group full" style="margin-bottom: 4px;">
         <label for="memo">備考 / 引継ぎ事項</label>
         <textarea id="memo" rows="2" placeholder="過不足の理由など"></textarea>
       </div>
@@ -628,11 +627,9 @@
   let globalStoreList = [];
   let globalStockList = [];
 
-  // デフォルトで管理するアイテムリスト
   const defaultItems = ['両替用1万円札', '両替用千円札', 'レシートロール紙', '受領印インクパッド'];
 
   document.addEventListener('DOMContentLoaded', () => {
-    // タイムスタンプのタイムズレを防ぐため、常に最新の端末ローカル時間をセット
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('datetime').value = now.toISOString().slice(0, 16);
@@ -693,7 +690,6 @@
     document.getElementById('staff-master-store-label').textContent = `【${currentStoreName}】`;
   }
 
-  // スタッフ選択をドロップダウンに反映
   function renderStaffDropdowns() {
     ['reg1-staff', 'reg2-staff'].forEach(id => {
       const select = document.getElementById(id);
@@ -709,7 +705,6 @@
     });
   }
 
-  // クイックスタッフ追加（折りたたみ内）
   async function addNewStaffQuick(inputId, targetSelectId) {
     const inputEl = document.getElementById(inputId);
     const name = inputEl.value.trim();
@@ -730,7 +725,7 @@
         renderStaffDropdowns();
         document.getElementById(targetSelectId).value = name;
         inputEl.value = '';
-        inputEl.closest('details').open = false; // 折りたたみを閉じる
+        inputEl.closest('details').open = false;
       } else {
         alert('追加エラー: ' + res.message);
       }
@@ -741,7 +736,6 @@
     }
   }
 
-  // 在庫テーブル描画
   function renderStockTable() {
     const tbody = document.getElementById('stock-table-body');
     tbody.innerHTML = '';
@@ -753,13 +747,12 @@
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="label-col">${itemName}</td>
-        <td><input type="number" class="stock-qty-input" data-item="${itemName}" value="${qty}" style="text-align:right;"></td>
+        <td><input type="number" class="stock-qty-input" data-item="${itemName}" value="${qty}" style="text-align:right; padding:3px 6px;"></td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  // 在庫データをスプレッドシートに保存
   async function saveStockData() {
     const stocks = [];
     document.querySelectorAll('.stock-qty-input').forEach(input => {
@@ -995,13 +988,14 @@
 
       globalRecords.push(record);
       buildReportSummary();
-      showLoading('画像を生成中...');
+      showLoading('A4サイズ画像を作成中...');
 
       const exportTarget = document.getElementById('export-area');
       const canvas = await html2canvas(exportTarget, {
-        scale: 2,
+        scale: 2, // 高解像度レンダリング
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 794 // A4縦サイズ（96dpi換算のピクセル幅）に固定して綺麗に一枚化
       });
 
       canvas.toBlob(async (blob) => {
