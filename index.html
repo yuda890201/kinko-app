@@ -54,7 +54,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    /* 画像出力対象エリアのラッパー */
     #export-area {
       background: #fff;
       padding: 4px;
@@ -126,6 +125,7 @@
     input[type="datetime-local"],
     input[type="date"],
     input[type="text"],
+    input[type="number"],
     select,
     textarea {
       padding: 6px 8px;
@@ -181,7 +181,21 @@
     .summary-row.total { font-weight: bold; font-size: 1.1rem; border-bottom: 1px dashed #ccc; padding-bottom: 4px; margin-bottom: 4px; }
     .summary-row.diff { font-weight: bold; font-size: 1.05rem; padding: 4px; border-radius: 4px; margin-top: 4px; }
 
-    /* 画像書き出し用のレポートボックス */
+    /* 折りたたみエリア（スタッフ新規登録） */
+    details.staff-accordion {
+      background: #fdfdfd;
+      border: 1px dashed #0066cc;
+      border-radius: 4px;
+      padding: 6px 10px;
+      margin-top: 6px;
+      font-size: 0.85rem;
+    }
+    details.staff-accordion summary {
+      cursor: pointer;
+      color: #0066cc;
+      font-weight: bold;
+    }
+
     .export-report-box {
       border: 1px solid #0066cc;
       background: #f0f7ff;
@@ -211,6 +225,7 @@
     .btn-submit { background-color: var(--primary-color); color: #fff; }
     .btn-reset { background-color: #e0e0e0; color: #333; }
     .btn-danger { background-color: #dc3545; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    .btn-small { padding: 4px 8px; font-size: 0.8rem; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
     .summary-table { width: 100%; margin-top: 10px; font-size: 0.85rem; }
     .summary-table th { background: #e9ecef; }
@@ -283,12 +298,9 @@
 
 <div class="container">
 
-  <datalist id="staff-list"></datalist>
-
   <!-- 入力画面 -->
   <div id="input-view" class="view-section">
     
-    <!-- ★ここから下の領域が画像化されます -->
     <div id="export-area">
       <div class="header-bar">
         <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
@@ -390,21 +402,48 @@
         </div>
       </div>
 
+      <!-- 1.5 各アイテム在庫数エリア -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>【1.5】アイテム在庫数確認</span>
+          <button class="btn-small" onclick="saveStockData()">在庫数保存</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>アイテム名</th><th>現在の在庫数</th></tr>
+          </thead>
+          <tbody id="stock-table-body">
+            <!-- 動的生成 -->
+          </tbody>
+        </table>
+      </div>
+
       <!-- 2. 各レジ過不足状況エリア -->
       <div class="section-card">
         <div class="section-title">【2】各レジ過不足状況</div>
+        
         <!-- 1レジ -->
         <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
           <div class="info-grid">
             <div class="field-group">
               <label for="reg1-staff">1レジ担当者</label>
-              <input type="text" id="reg1-staff" list="staff-list" placeholder="名前を選択/入力" onchange="checkStaffAlert(this.value)">
+              <select id="reg1-staff" onchange="checkStaffAlert(this.value)"></select>
             </div>
             <div class="field-group">
               <label for="reg1-diff">現金過不足</label>
               <input type="text" id="reg1-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg1-diff', '1レジ現金過不足')">
             </div>
           </div>
+
+          <!-- スタッフ新規登録（折りたたみ式） -->
+          <details class="staff-accordion">
+            <summary>+ リストにないスタッフを新規登録する</summary>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+              <input type="text" id="quick-new-staff-1" placeholder="スタッフ名を入力">
+              <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-1', 'reg1-staff')">追加</button>
+            </div>
+          </details>
+
           <div class="coupon-grid">
             <div class="field-group">
               <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
@@ -422,13 +461,23 @@
           <div class="info-grid">
             <div class="field-group">
               <label for="reg2-staff">2レジ担当者</label>
-              <input type="text" id="reg2-staff" list="staff-list" placeholder="名前を選択/入力" onchange="checkStaffAlert(this.value)">
+              <select id="reg2-staff" onchange="checkStaffAlert(this.value)"></select>
             </div>
             <div class="field-group">
               <label for="reg2-diff">現金過不足</label>
               <input type="text" id="reg2-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg2-diff', '2レジ現金過不足')">
             </div>
           </div>
+
+          <!-- スタッフ新規登録（折りたたみ式） -->
+          <details class="staff-accordion">
+            <summary>+ リストにないスタッフを新規登録する</summary>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+              <input type="text" id="quick-new-staff-2" placeholder="スタッフ名を入力">
+              <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-2', 'reg2-staff')">追加</button>
+            </div>
+          </details>
+
           <div class="coupon-grid">
             <div class="field-group">
               <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
@@ -448,10 +497,8 @@
         <textarea id="memo" rows="2" placeholder="過不足の理由など"></textarea>
       </div>
 
-      <!-- 画像にも含まれる集計・注意書きブロック -->
       <div id="export-report-container" class="export-report-box"></div>
     </div>
-    <!-- ★画像化エリアここまで -->
 
     <div class="btn-group">
       <button class="btn-main btn-reset" onclick="resetRegisterOnly()">レジ状況クリア</button>
@@ -569,8 +616,7 @@
 </div>
 
 <script>
-  // ★ ご自身のGASのWebアプリURLを入力してください
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzIXOdiv0WWhEit_0n_WFxh-f_KN0RcvGneG8ZMQUyggrylqimPsbyG1bUVEIz5GL5u/exec';
+  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxkZgBELiLj2xpjMoWQHlSV7SG9p5aUIrLQTLS9pkI9ThHDVv3kYwKTyRHZ4FuByYhgsw/exec';
 
   let currentStoreName = localStorage.getItem('kinko_selected_store') || '1号店';
   let targetVaultAmount = 200000;
@@ -580,8 +626,13 @@
   let globalRecords = [];
   let globalStaffList = [];
   let globalStoreList = [];
+  let globalStockList = [];
+
+  // デフォルトで管理するアイテムリスト
+  const defaultItems = ['両替用1万円札', '両替用千円札', 'レシートロール紙', '受領印インクパッド'];
 
   document.addEventListener('DOMContentLoaded', () => {
+    // タイムスタンプのタイムズレを防ぐため、常に最新の端末ローカル時間をセット
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('datetime').value = now.toISOString().slice(0, 16);
@@ -598,21 +649,15 @@
   }
   function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
 
-async function callGASApi(payload) {
+  async function callGASApi(payload) {
     const res = await fetch(GAS_API_URL, {
       method: 'POST',
       body: JSON.stringify(payload),
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      redirect: 'follow', // ← ★ スマホでのリダイレクト遮断を防ぐために必須
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      redirect: 'follow',
       mode: 'cors'
     });
-    
-    if (!res.ok) {
-      throw new Error(`HTTPエラー: ${res.status}`);
-    }
-    
+    if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
     return await res.json();
   }
 
@@ -624,10 +669,12 @@ async function callGASApi(payload) {
         globalStoreList = data.storeList || [];
         globalStaffList = data.staffList || [];
         globalRecords = data.records || [];
+        globalStockList = data.stockList || [];
         targetVaultAmount = data.targetVaultAmount || 200000;
 
         updateStoreUI();
-        renderStaffDatalist();
+        renderStaffDropdowns();
+        renderStockTable();
         calculate();
       } else {
         alert('取得エラー: ' + data.message);
@@ -646,14 +693,95 @@ async function callGASApi(payload) {
     document.getElementById('staff-master-store-label').textContent = `【${currentStoreName}】`;
   }
 
-  function renderStaffDatalist() {
-    const datalist = document.getElementById('staff-list');
-    datalist.innerHTML = '';
-    globalStaffList.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      datalist.appendChild(opt);
+  // スタッフ選択をドロップダウンに反映
+  function renderStaffDropdowns() {
+    ['reg1-staff', 'reg2-staff'].forEach(id => {
+      const select = document.getElementById(id);
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">-- 担当者を選択 --</option>';
+      globalStaffList.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
     });
+  }
+
+  // クイックスタッフ追加（折りたたみ内）
+  async function addNewStaffQuick(inputId, targetSelectId) {
+    const inputEl = document.getElementById(inputId);
+    const name = inputEl.value.trim();
+    if (!name) {
+      alert('スタッフ名を入力してください。');
+      return;
+    }
+    if (globalStaffList.includes(name)) {
+      alert('すでに登録されているスタッフ名です。');
+      return;
+    }
+
+    showLoading('スタッフ追加中...');
+    try {
+      const res = await callGASApi({ action: 'addStaff', storeName: currentStoreName, staffName: name });
+      if (res.status === 'success') {
+        globalStaffList.push(name);
+        renderStaffDropdowns();
+        document.getElementById(targetSelectId).value = name;
+        inputEl.value = '';
+        inputEl.closest('details').open = false; // 折りたたみを閉じる
+      } else {
+        alert('追加エラー: ' + res.message);
+      }
+    } catch (err) {
+      alert('通信エラー: ' + err.message);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // 在庫テーブル描画
+  function renderStockTable() {
+    const tbody = document.getElementById('stock-table-body');
+    tbody.innerHTML = '';
+
+    defaultItems.forEach(itemName => {
+      const found = globalStockList.find(s => s.itemName === itemName);
+      const qty = found ? found.quantity : 0;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="label-col">${itemName}</td>
+        <td><input type="number" class="stock-qty-input" data-item="${itemName}" value="${qty}" style="text-align:right;"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // 在庫データをスプレッドシートに保存
+  async function saveStockData() {
+    const stocks = [];
+    document.querySelectorAll('.stock-qty-input').forEach(input => {
+      stocks.push({
+        itemName: input.getAttribute('data-item'),
+        quantity: parseInt(input.value, 10) || 0
+      });
+    });
+
+    showLoading('在庫数を保存中...');
+    try {
+      const res = await callGASApi({ action: 'saveStock', storeName: currentStoreName, stocks: stocks });
+      if (res.status === 'success') {
+        alert('在庫数をスプレッドシートに保存しました。');
+      } else {
+        alert('在庫保存エラー: ' + res.message);
+      }
+    } catch (err) {
+      alert('通信エラー: ' + err.message);
+    } finally {
+      hideLoading();
+    }
   }
 
   function initDropdowns() {
@@ -825,13 +953,12 @@ async function callGASApi(payload) {
     }
   }
 
-  // ★ 記録保存 ＆ 高画質画像共有処理
   async function submitAndShareImage() {
     const staff1 = document.getElementById('reg1-staff').value;
     const staff2 = document.getElementById('reg2-staff').value;
 
     if (!staff1 && !staff2) {
-      alert('担当者名を少なくとも1名入力してください。');
+      alert('担当者名を少なくとも1名選択してください。');
       return;
     }
 
@@ -859,7 +986,6 @@ async function callGASApi(payload) {
     showLoading('スプレッドシートに保存中...');
 
     try {
-      // 1. スプレッドシートへ保存
       const res = await callGASApi({ action: 'saveRecord', record: record });
       if (res.status !== 'success') {
         alert('保存失敗: ' + res.message);
@@ -868,31 +994,22 @@ async function callGASApi(payload) {
       }
 
       globalRecords.push(record);
-      if (staff1 && !globalStaffList.includes(staff1)) globalStaffList.push(staff1);
-      if (staff2 && !globalStaffList.includes(staff2)) globalStaffList.push(staff2);
-      renderStaffDatalist();
-
-      // 2. 直近1ヶ月レポートを描画
       buildReportSummary();
-
       showLoading('画像を生成中...');
 
-      // 3. 入力エリアをhtml2canvasで高画質キャプチャ
       const exportTarget = document.getElementById('export-area');
       const canvas = await html2canvas(exportTarget, {
-        scale: 2, // 高解像度（Retina対応）
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff'
       });
 
-      // 4. Blob (画像データ) に変換
       canvas.toBlob(async (blob) => {
         const fileName = `金庫引継ぎ_${currentStoreName}_${record.datetime.replace(/[:T-]/g, '')}.png`;
         const file = new File([blob], fileName, { type: 'image/png' });
 
         hideLoading();
 
-        // 5. スマホ標準の共有シート（Web Share API）を呼び出し
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({
@@ -901,11 +1018,9 @@ async function callGASApi(payload) {
               text: `【${currentStoreName}】金庫引継ぎ記録 (${record.datetime})`
             });
           } catch (shareErr) {
-            // ユーザーが共有をキャンセルした場合は何もしない
-            console.log('Share canceled or failed', shareErr);
+            console.log('Share canceled', shareErr);
           }
         } else {
-          // PCや非対応ブラウザの場合は自動ダウンロード
           const downloadUrl = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = downloadUrl;
@@ -1091,7 +1206,7 @@ async function callGASApi(payload) {
         const res = await callGASApi({ action: 'deleteStaff', storeName: currentStoreName, staffName: name });
         if (res.status === 'success') {
           globalStaffList = globalStaffList.filter(n => n !== name);
-          renderStaffDatalist();
+          renderStaffDropdowns();
           renderStaffMaster();
         } else {
           alert('削除エラー: ' + res.message);
