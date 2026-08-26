@@ -17,7 +17,7 @@
 
   <style>
     :root {
-      --border-color: #333;
+      --border-color: #222;
       --primary-color: #0066cc;
       --success-color: #28a745;
       --bg-color: #f8f9fa;
@@ -47,7 +47,7 @@
     }
 
     .container {
-      max-width: 650px;
+      max-width: 680px;
       margin: 0 auto;
       background: #fff;
       padding: 16px;
@@ -55,29 +55,48 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
+    /* ★ A4フィードバックシート専用デザイン（幅794px固定ベース） */
     #export-area {
       background: #fff;
-      padding: 12px;
+      padding: 24px;
       box-sizing: border-box;
       width: 100%;
+      border: 1px solid #ddd;
+    }
+
+    /* 帳票ヘッダー */
+    .report-header {
+      text-align: center;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+    }
+    .report-header h2 {
+      font-size: 1.25rem;
+      margin: 0 0 4px 0;
+      letter-spacing: 1px;
+    }
+    .report-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #444;
     }
 
     .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid var(--border-color);
-      padding-bottom: 6px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
-
-    h1 { font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+    h1 { font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 6px; }
     .store-badge {
-      background: #0066cc;
+      background: #333;
       color: #fff;
       font-size: 0.75rem;
       padding: 2px 8px;
-      border-radius: 12px;
+      border-radius: 4px;
       font-weight: normal;
     }
 
@@ -86,29 +105,30 @@
       background: #6c757d;
       color: #fff;
       border: none;
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .section-card {
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      border: 1px solid #bbb;
+      border-radius: 4px;
       padding: 8px 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       background-color: #fff;
     }
 
     .section-title {
       font-weight: bold;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       margin-bottom: 6px;
       padding-bottom: 2px;
-      border-bottom: 1px dashed #bbb;
+      border-bottom: 1px solid #ccc;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: #111;
     }
 
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -116,7 +136,7 @@
     .field-group.full { grid-column: span 2; }
 
     label {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: bold;
       margin-bottom: 2px;
       color: #444;
@@ -131,8 +151,8 @@
     select,
     textarea {
       padding: 5px 8px;
-      font-size: 0.9rem;
-      border: 1px solid #ccc;
+      font-size: 0.85rem;
+      border: 1px solid #bbb;
       border-radius: 4px;
       box-sizing: border-box;
       width: 100%;
@@ -154,7 +174,7 @@
     .highlight-ok {
       background-color: var(--diff-ok-bg) !important;
       color: var(--diff-ok-color) !important;
-      border-color: #ccc !important;
+      border-color: #bbb !important;
     }
 
     .coupon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
@@ -162,26 +182,26 @@
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       background-color: #0066cc;
       color: #fff;
       border-radius: 50%;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       cursor: pointer;
     }
 
-    table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-    th, td { border: 1px solid #ccc; padding: 3px 6px; text-align: center; }
-    th { background-color: #f2f2f2; font-size: 0.78rem; }
-    td.label-col { background-color: #fafafa; font-weight: bold; text-align: left; font-size: 0.8rem; width: 35%; }
-    td.num-col { text-align: right; width: 35%; font-size: 0.85rem; }
-    select.select-count { text-align: right; font-size: 0.85rem; padding: 2px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    th, td { border: 1px solid #bbb; padding: 3px 5px; text-align: center; }
+    th { background-color: #eaeaea; font-size: 0.75rem; color: #111; }
+    td.label-col { background-color: #f7f7f7; font-weight: bold; text-align: left; font-size: 0.78rem; width: 35%; }
+    td.num-col { text-align: right; width: 35%; font-size: 0.8rem; }
+    select.select-count { text-align: right; font-size: 0.8rem; padding: 2px; }
 
-    .summary-card { border: 2px solid var(--border-color); border-radius: 6px; padding: 6px 8px; margin-bottom: 2px; }
-    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; font-size: 0.85rem; }
-    .summary-row.total { font-weight: bold; font-size: 1rem; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 3px; }
-    .summary-row.diff { font-weight: bold; font-size: 0.95rem; padding: 3px; border-radius: 4px; margin-top: 3px; }
+    .summary-card { border: 2px solid var(--border-color); border-radius: 4px; padding: 6px 8px; margin-bottom: 2px; background: #fafafa; }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 1px 0; font-size: 0.82rem; }
+    .summary-row.total { font-weight: bold; font-size: 0.95rem; border-bottom: 1px dashed #bbb; padding-bottom: 3px; margin-bottom: 3px; }
+    .summary-row.diff { font-weight: bold; font-size: 0.9rem; padding: 3px; border-radius: 4px; margin-top: 3px; }
 
     details.staff-accordion {
       background: #fdfdfd;
@@ -189,7 +209,7 @@
       border-radius: 4px;
       padding: 4px 8px;
       margin-top: 4px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
     details.staff-accordion summary {
       cursor: pointer;
@@ -200,17 +220,38 @@
     .export-report-box {
       border: 1px solid #0066cc;
       background: #f0f7ff;
-      border-radius: 6px;
+      border-radius: 4px;
       padding: 8px 10px;
       margin-top: 8px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       line-height: 1.4;
     }
     .export-notice {
       color: #cc0000;
       font-weight: bold;
       margin-top: 3px;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
+    }
+
+    /* 署名（確認）欄 */
+    .sign-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+      border-top: 1px solid #222;
+      padding-top: 8px;
+    }
+    .sign-box {
+      border: 1px solid #bbb;
+      height: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 0.75rem;
+      color: #666;
+      background: #fff;
     }
 
     .btn-group { display: flex; gap: 8px; margin-top: 12px; }
@@ -303,8 +344,18 @@
   <!-- 入力画面 -->
   <div id="input-view" class="view-section">
     
+    <!-- ★ A4フィードバックシート（帳票エリア） -->
     <div id="export-area">
-      <div class="header-bar">
+      <!-- 帳票ヘッダー -->
+      <div class="report-header">
+        <h2>金庫・レジ現金点検 引き継ぎレポート</h2>
+        <div class="report-meta">
+          <span>所属店舗：<strong id="report-store-name">未設定</strong></span>
+          <span>点検日時：<strong id="report-datetime-str">--</strong></span>
+        </div>
+      </div>
+
+      <div class="header-bar" style="display:none;">
         <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
         <div class="nav-buttons">
           <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
@@ -313,11 +364,11 @@
         </div>
       </div>
 
-      <div class="section-card">
+      <div class="section-card" style="display:none;">
         <div class="info-grid">
           <div class="field-group full">
             <label for="datetime">点検日時</label>
-            <input type="datetime-local" id="datetime">
+            <input type="datetime-local" id="datetime" onchange="updateReportHeader()">
           </div>
         </div>
       </div>
@@ -409,7 +460,7 @@
         <div class="section-title">【2】各レジ過不足状況</div>
         
         <!-- 1レジ -->
-        <div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #ccc;">
+        <div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #bbb;">
           <div class="info-grid">
             <div class="field-group">
               <label for="reg1-staff">1レジ担当者</label>
@@ -482,6 +533,23 @@
       </div>
 
       <div id="export-report-container" class="export-report-box"></div>
+
+      <!-- 帳票署名欄 -->
+      <div class="sign-section">
+        <div class="sign-box"><span>点検者署名：</span><span>印</span></div>
+        <div class="sign-box"><span>責任者確認：</span><span>印</span></div>
+      </div>
+    </div>
+    <!-- 帳票エリアここまで -->
+
+    <!-- アプリ操作用ナビバー（画像には含まれません） -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px 0; padding: 0 4px;">
+      <span style="font-size: 0.85rem; font-weight: bold; color: #0066cc;" id="ui-store-disp">店舗：1号店</span>
+      <div class="nav-buttons">
+        <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
+        <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
+        <button class="btn-nav" onclick="showMasterView()">マスタ設定</button>
+      </div>
     </div>
 
     <div class="btn-group">
@@ -489,9 +557,8 @@
       <button class="btn-main btn-submit" id="submit-btn" onclick="submitRecordOnly()">① 記録を保存する</button>
     </div>
 
-    <!-- 保存完了後に出現する画像共有ボタン -->
     <div id="share-btn-container" style="display: none; margin-top: 8px;">
-      <button class="btn-main btn-success" style="width: 100%;" onclick="generateAndShareImage()">② A4画像を生成して共有・保存する</button>
+      <button class="btn-main btn-success" style="width: 100%;" onclick="generateAndShareImage()">② A4フィードバックシート画像を共有・保存</button>
     </div>
   </div>
 
@@ -615,7 +682,7 @@
   let globalRecords = [];
   let globalStaffList = [];
   let globalStoreList = [];
-  let lastSavedRecord = null; // 共有用の直近保存データ保持
+  let lastSavedRecord = null;
 
   document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
@@ -623,9 +690,19 @@
     document.getElementById('datetime').value = now.toISOString().slice(0, 16);
     document.getElementById('archive-date').value = now.toISOString().slice(0, 10);
 
+    updateReportHeader();
     initDropdowns();
     fetchData();
   });
+
+  function updateReportHeader() {
+    const dtVal = document.getElementById('datetime').value;
+    document.getElementById('report-store-name').textContent = currentStoreName;
+    if (dtVal) {
+      const formatted = dtVal.replace('T', ' ');
+      document.getElementById('report-datetime-str').textContent = formatted;
+    }
+  }
 
   function showLoading(msg = '通信中...') {
     const el = document.getElementById('loading-overlay');
@@ -671,7 +748,8 @@
   }
 
   function updateStoreUI() {
-    document.getElementById('current-store-badge').textContent = currentStoreName;
+    document.getElementById('report-store-name').textContent = currentStoreName;
+    document.getElementById('ui-store-disp').textContent = `店舗：${currentStoreName}`;
     document.getElementById('target-amount-disp').textContent = targetVaultAmount.toLocaleString();
     document.getElementById('master-target').value = targetVaultAmount.toLocaleString() + '円';
     document.getElementById('staff-master-store-label').textContent = `【${currentStoreName}】`;
@@ -758,6 +836,7 @@
   }
 
   function saveFormState() {
+    updateReportHeader();
     const state = {
       'bill-10000': document.getElementById('bill-10000').value,
       'bill-5000': document.getElementById('bill-5000').value,
@@ -810,6 +889,7 @@
       if (state['reg2-disc-coupon']) document.getElementById('reg2-disc-coupon').value = state['reg2-disc-coupon'];
       if (state['memo']) document.getElementById('memo').value = state['memo'];
       updateHighlights();
+      updateReportHeader();
     } catch (e) {
       console.error('State load error', e);
     }
@@ -952,7 +1032,6 @@
     }
   }
 
-  // ステップ1：記録保存ボタン（スプレッドシート送信のみ）
   async function submitRecordOnly() {
     const staff1 = document.getElementById('reg1-staff').value;
     const staff2 = document.getElementById('reg2-staff').value;
@@ -997,9 +1076,8 @@
       buildReportSummary();
       hideLoading();
 
-      // 保存成功したら「② 画像共有ボタン」を出現させる
       document.getElementById('share-btn-container').style.display = 'block';
-      alert('スプレッドシートへの保存が完了しました！\n下の「② A4画像を生成して共有・保存する」ボタンを押してください。');
+      alert('スプレッドシートへの保存が完了しました！\n下の「② A4フィードバックシート画像を共有・保存」ボタンを押してください。');
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
     } catch (err) {
@@ -1008,11 +1086,13 @@
     }
   }
 
-  // ステップ2：画像生成＆共有ボタン（ユーザー操作直結で確実にポップアップ）
   async function generateAndShareImage() {
-    showLoading('A4サイズ画像を作成中...');
+    showLoading('A4フィードバックシートを作成中...');
 
     try {
+      // 帳票内の一時的非表示パーツ（アコーディオンなど）を一時的に隠す
+      document.querySelectorAll('.staff-accordion').forEach(el => el.style.display = 'none');
+
       const exportTarget = document.getElementById('export-area');
       const canvas = await html2canvas(exportTarget, {
         scale: 2,
@@ -1021,9 +1101,12 @@
         width: 794
       });
 
+      // アコーディオンを元に戻す
+      document.querySelectorAll('.staff-accordion').forEach(el => el.style.display = 'block');
+
       canvas.toBlob(async (blob) => {
         const dtStr = lastSavedRecord ? lastSavedRecord.datetime : 'file';
-        const fileName = `金庫引継ぎ_${currentStoreName}_${dtStr.replace(/[:T-]/g, '')}.png`;
+        const fileName = `引継ぎレポート_${currentStoreName}_${dtStr.replace(/[:T-]/g, '')}.png`;
         const file = new File([blob], fileName, { type: 'image/png' });
 
         hideLoading();
@@ -1032,8 +1115,8 @@
           try {
             await navigator.share({
               files: [file],
-              title: '金庫引継ぎ記録',
-              text: `【${currentStoreName}】金庫引継ぎ記録`
+              title: '金庫・レジ現金点検 引き継ぎレポート',
+              text: `【${currentStoreName}】金庫・レジ現金点検レポート`
             });
           } catch (shareErr) {
             console.log('Share canceled', shareErr);
@@ -1045,7 +1128,7 @@
           a.download = fileName;
           a.click();
           URL.revokeObjectURL(downloadUrl);
-          alert('画像をダウンロードしました。');
+          alert('レポート画像をダウンロードしました。');
         }
       }, 'image/png');
 
