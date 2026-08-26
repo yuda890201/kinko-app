@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>スタッフ用金庫引継ぎ記録</title>
 
- <!-- ファビコン (ブラウザータブ用) -->
-    <link rel="icon" type="image/png" href="kinko.png">
-
-    <!-- iOS (iPhone/iPad) ホーム画面用アイコン -->
-    <link rel="apple-touch-icon" href="kinko.png">
+  <!-- アイコン設定 -->
+  <link rel="icon" type="image/png" href="kinko.png">
+  <link rel="apple-touch-icon" href="kinko.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="kinko.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="金庫引継ぎ">
+
+  <!-- 画面キャプチャ用ライブラリ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     :root {
@@ -50,6 +52,12 @@
       padding: 16px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* 画像出力対象エリアのラッパー */
+    #export-area {
+      background: #fff;
+      padding: 4px;
     }
 
     .header-bar {
@@ -173,16 +181,31 @@
     .summary-row.total { font-weight: bold; font-size: 1.1rem; border-bottom: 1px dashed #ccc; padding-bottom: 4px; margin-bottom: 4px; }
     .summary-row.diff { font-weight: bold; font-size: 1.05rem; padding: 4px; border-radius: 4px; margin-top: 4px; }
 
-    .print-only-section { display: none; }
+    /* 画像書き出し用のレポートボックス */
+    .export-report-box {
+      border: 1px solid #0066cc;
+      background: #f0f7ff;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .export-notice {
+      color: #cc0000;
+      font-weight: bold;
+      margin-top: 4px;
+      font-size: 0.78rem;
+    }
 
-    .btn-group { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
     button.btn-main {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       font-size: 0.95rem;
       font-weight: bold;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
     }
     .btn-submit { background-color: var(--primary-color); color: #fff; }
@@ -250,39 +273,6 @@
       flex-direction: column;
       font-weight: bold;
     }
-
-    @media print {
-      @page { size: A4 portrait; margin: 6mm; }
-      body { background: #fff; padding: 0; font-size: 8pt; color: #000; }
-      .container { box-shadow: none; padding: 0; max-width: 100%; }
-      .nav-buttons, .btn-group, .help-icon, .view-section.hidden, #loading-overlay { display: none !important; }
-      .section-card { border: 1px solid #000; margin-bottom: 3mm; padding: 4px; page-break-inside: avoid; }
-      .section-title { font-size: 8.5pt; margin-bottom: 3px; padding-bottom: 1px; }
-      table { margin-bottom: 3px; }
-      th, td { border: 1px solid #000; padding: 1px 3px; font-size: 7.5pt; }
-      input, select, textarea { border: none !important; background: transparent !important; appearance: none; -webkit-appearance: none; padding: 0 !important; font-size: 7.5pt !important; }
-      .numpad-input { background: transparent !important; }
-      .highlight-ng { background: #ffeeee !important; border: 1px solid #cc0000 !important; }
-      .summary-card { padding: 3px; margin-bottom: 0; }
-      .summary-row { font-size: 8pt; }
-      .summary-row.total { font-size: 9pt; padding-bottom: 1px; margin-bottom: 1px; }
-
-      .print-only-section {
-        display: block !important;
-        border: 1px solid #000;
-        padding: 4px;
-        margin-top: 3mm;
-        font-size: 7.5pt;
-        background: #fdfdfd;
-        page-break-inside: avoid;
-      }
-      .print-notice {
-        color: #cc0000;
-        font-weight: bold;
-        margin-top: 2px;
-        font-size: 7.5pt;
-      }
-    }
   </style>
 </head>
 <body>
@@ -297,169 +287,175 @@
 
   <!-- 入力画面 -->
   <div id="input-view" class="view-section">
-    <div class="header-bar">
-      <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
-      <div class="nav-buttons">
-        <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
-        <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
-        <button class="btn-nav" onclick="showMasterView()">マスタ設定</button>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="info-grid">
-        <div class="field-group full">
-          <label for="datetime">点検日時</label>
-          <input type="datetime-local" id="datetime">
+    
+    <!-- ★ここから下の領域が画像化されます -->
+    <div id="export-area">
+      <div class="header-bar">
+        <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
+        <div class="nav-buttons">
+          <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
+          <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
+          <button class="btn-nav" onclick="showMasterView()">マスタ設定</button>
         </div>
       </div>
-    </div>
 
-    <!-- 1. 金庫内現金実査エリア -->
-    <div class="section-card">
-      <div class="section-title">【1】金庫内現金実査</div>
-      <table>
-        <thead>
-          <tr><th>金種</th><th>区分 / 数量</th><th>金額</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="label-col">10,000円札</td>
-            <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">5,000円札</td>
-            <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">2,000円札</td>
-            <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">1,000円札</td>
-            <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">500円玉 (10枚単位)</td>
-            <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">100円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="100" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">50円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="50" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">10円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="10" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">5円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="5" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">1円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="1" onchange="calculate()"></select></td>
-            <td class="num-col"><span class="subtotal">0</span> 円</td>
-          </tr>
-          <tr>
-            <td class="label-col">硬貨バラ（各種）</td>
-            <td><select id="loose-coins" onchange="calculate()"></select></td>
-            <td class="num-col"><span id="loose-subtotal">0</span> 円</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="summary-card">
-        <div class="summary-row total">
-          <span>実査合計（金庫内現金）</span>
-          <span><strong id="total-amount">0</strong> 円</span>
-        </div>
-        <div class="summary-row">
-          <span>金庫設定金額（理論値）</span>
-          <span><span id="target-amount-disp">200,000</span> 円</span>
-        </div>
-        <div class="summary-row diff highlight-ok" id="diff-container">
-          <span>金庫過不足額</span>
-          <span><strong id="diff-amount">0</strong> 円</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. 各レジ過不足状況エリア -->
-    <div class="section-card">
-      <div class="section-title">【2】各レジ過不足状況</div>
-      <!-- 1レジ -->
-      <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
+      <div class="section-card">
         <div class="info-grid">
-          <div class="field-group">
-            <label for="reg1-staff">1レジ担当者</label>
-            <input type="text" id="reg1-staff" list="staff-list" placeholder="名前を選択/入力" onchange="checkStaffAlert(this.value)">
-          </div>
-          <div class="field-group">
-            <label for="reg1-diff">現金過不足</label>
-            <input type="text" id="reg1-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg1-diff', '1レジ現金過不足')">
-          </div>
-        </div>
-        <div class="coupon-grid">
-          <div class="field-group">
-            <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-            <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
-          </div>
-          <div class="field-group">
-            <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-            <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+          <div class="field-group full">
+            <label for="datetime">点検日時</label>
+            <input type="datetime-local" id="datetime">
           </div>
         </div>
       </div>
 
-      <!-- 2レジ -->
-      <div>
-        <div class="info-grid">
-          <div class="field-group">
-            <label for="reg2-staff">2レジ担当者</label>
-            <input type="text" id="reg2-staff" list="staff-list" placeholder="名前を選択/入力" onchange="checkStaffAlert(this.value)">
+      <!-- 1. 金庫内現金実査エリア -->
+      <div class="section-card">
+        <div class="section-title">【1】金庫内現金実査</div>
+        <table>
+          <thead>
+            <tr><th>金種</th><th>区分 / 数量</th><th>金額</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="label-col">10,000円札</td>
+              <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">5,000円札</td>
+              <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">2,000円札</td>
+              <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">1,000円札</td>
+              <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">500円玉 (10枚単位)</td>
+              <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">100円棒金</td>
+              <td><select class="select-count" data-type="roll" data-unit="100" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">50円棒金</td>
+              <td><select class="select-count" data-type="roll" data-unit="50" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">10円棒金</td>
+              <td><select class="select-count" data-type="roll" data-unit="10" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">5円棒金</td>
+              <td><select class="select-count" data-type="roll" data-unit="5" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">1円棒金</td>
+              <td><select class="select-count" data-type="roll" data-unit="1" onchange="calculate()"></select></td>
+              <td class="num-col"><span class="subtotal">0</span> 円</td>
+            </tr>
+            <tr>
+              <td class="label-col">硬貨バラ（各種）</td>
+              <td><select id="loose-coins" onchange="calculate()"></select></td>
+              <td class="num-col"><span id="loose-subtotal">0</span> 円</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="summary-card">
+          <div class="summary-row total">
+            <span>実査合計（金庫内現金）</span>
+            <span><strong id="total-amount">0</strong> 円</span>
           </div>
-          <div class="field-group">
-            <label for="reg2-diff">現金過不足</label>
-            <input type="text" id="reg2-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg2-diff', '2レジ現金過不足')">
+          <div class="summary-row">
+            <span>金庫設定金額（理論値）</span>
+            <span><span id="target-amount-disp">200,000</span> 円</span>
           </div>
-        </div>
-        <div class="coupon-grid">
-          <div class="field-group">
-            <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-            <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
-          </div>
-          <div class="field-group">
-            <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-            <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+          <div class="summary-row diff highlight-ok" id="diff-container">
+            <span>金庫過不足額</span>
+            <span><strong id="diff-amount">0</strong> 円</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 備考 -->
-    <div class="field-group full" style="margin-bottom: 8px;">
-      <label for="memo">備考 / 引継ぎ事項</label>
-      <textarea id="memo" rows="2" placeholder="過不足の理由など"></textarea>
-    </div>
+      <!-- 2. 各レジ過不足状況エリア -->
+      <div class="section-card">
+        <div class="section-title">【2】各レジ過不足状況</div>
+        <!-- 1レジ -->
+        <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
+          <div class="info-grid">
+            <div class="field-group">
+              <label for="reg1-staff">1レジ担当者</label>
+              <input type="text" id="reg1-staff" list="staff-list" placeholder="名前を選択/入力" onchange="checkStaffAlert(this.value)">
+            </div>
+            <div class="field-group">
+              <label for="reg1-diff">現金過不足</label>
+              <input type="text" id="reg1-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg1-diff', '1レジ現金過不足')">
+            </div>
+          </div>
+          <div class="coupon-grid">
+            <div class="field-group">
+              <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
+              <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+            </div>
+            <div class="field-group">
+              <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
+              <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+            </div>
+          </div>
+        </div>
 
-    <div class="print-only-section" id="print-summary-area"></div>
+        <!-- 2レジ -->
+        <div>
+          <div class="info-grid">
+            <div class="field-group">
+              <label for="reg2-staff">2レジ担当者</label>
+              <input type="text" id="reg2-staff" list="staff-list" placeholder="名前を選択/入力" onchange="checkStaffAlert(this.value)">
+            </div>
+            <div class="field-group">
+              <label for="reg2-diff">現金過不足</label>
+              <input type="text" id="reg2-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg2-diff', '2レジ現金過不足')">
+            </div>
+          </div>
+          <div class="coupon-grid">
+            <div class="field-group">
+              <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
+              <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+            </div>
+            <div class="field-group">
+              <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
+              <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="updateHighlights()"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 備考 -->
+      <div class="field-group full" style="margin-bottom: 8px;">
+        <label for="memo">備考 / 引継ぎ事項</label>
+        <textarea id="memo" rows="2" placeholder="過不足の理由など"></textarea>
+      </div>
+
+      <!-- 画像にも含まれる集計・注意書きブロック -->
+      <div id="export-report-container" class="export-report-box"></div>
+    </div>
+    <!-- ★画像化エリアここまで -->
 
     <div class="btn-group">
       <button class="btn-main btn-reset" onclick="resetRegisterOnly()">レジ状況クリア</button>
-      <button class="btn-main btn-submit" id="submit-btn" onclick="submitAndPrint()">記録保存 ＆ A4印刷</button>
+      <button class="btn-main btn-submit" id="submit-btn" onclick="submitAndShareImage()">記録保存 ＆ 画像共有</button>
     </div>
   </div>
 
@@ -573,8 +569,8 @@
 </div>
 
 <script>
-  // ★ Step 2 でコピーしたGASのWebアプリURLを貼り付けてください
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzIXOdiv0WWhEit_0n_WFxh-f_KN0RcvGneG8ZMQUyggrylqimPsbyG1bUVEIz5GL5u/exec';
+  // ★ ご自身のGASのWebアプリURLを入力してください
+  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxkZgBELiLj2xpjMoWQHlSV7SG9p5aUIrLQTLS9pkI9ThHDVv3kYwKTyRHZ4FuByYhgsw/exec';
 
   let currentStoreName = localStorage.getItem('kinko_selected_store') || '1号店';
   let targetVaultAmount = 200000;
@@ -758,7 +754,7 @@
     }
   }
 
-  function preparePrintSummary() {
+  function buildReportSummary() {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const records1M = globalRecords.filter(r => new Date(r.datetime) >= oneMonthAgo);
@@ -798,14 +794,14 @@
     }
 
     const noticeHtml = 
-      `<div class="print-notice">` +
+      `<div class="export-notice">` +
       `【確認事項・注意喚起定型文】<br>` +
       `1. 過不足発生時は必ずレジ点検レシートとドロア内現物を再確認してください。<br>` +
       `2. クーポンの回収漏れ・打ち間違いはレジ違算の原因となります。会計時の受け渡しを徹底してください。<br>` +
       `3. 直近3ヶ月間の過不足金額が累計3,000円に達した場合は精算・請求の対象となります。` +
       `</div>`;
 
-    document.getElementById('print-summary-area').innerHTML = summaryHtml + noticeHtml;
+    document.getElementById('export-report-container').innerHTML = summaryHtml + noticeHtml;
   }
 
   function resetRegisterOnly() {
@@ -820,7 +816,8 @@
     }
   }
 
-  async function submitAndPrint() {
+  // ★ 記録保存 ＆ 高画質画像共有処理
+  async function submitAndShareImage() {
     const staff1 = document.getElementById('reg1-staff').value;
     const staff2 = document.getElementById('reg2-staff').value;
 
@@ -851,24 +848,68 @@
     };
 
     showLoading('スプレッドシートに保存中...');
-    try {
-      const res = await callGASApi({ action: 'saveRecord', record: record });
-      if (res.status === 'success') {
-        globalRecords.push(record);
-        if (staff1 && !globalStaffList.includes(staff1)) globalStaffList.push(staff1);
-        if (staff2 && !globalStaffList.includes(staff2)) globalStaffList.push(staff2);
-        renderStaffDatalist();
 
-        preparePrintSummary();
-        hideLoading();
-        window.print();
-      } else {
+    try {
+      // 1. スプレッドシートへ保存
+      const res = await callGASApi({ action: 'saveRecord', record: record });
+      if (res.status !== 'success') {
         alert('保存失敗: ' + res.message);
+        hideLoading();
+        return;
       }
+
+      globalRecords.push(record);
+      if (staff1 && !globalStaffList.includes(staff1)) globalStaffList.push(staff1);
+      if (staff2 && !globalStaffList.includes(staff2)) globalStaffList.push(staff2);
+      renderStaffDatalist();
+
+      // 2. 直近1ヶ月レポートを描画
+      buildReportSummary();
+
+      showLoading('画像を生成中...');
+
+      // 3. 入力エリアをhtml2canvasで高画質キャプチャ
+      const exportTarget = document.getElementById('export-area');
+      const canvas = await html2canvas(exportTarget, {
+        scale: 2, // 高解像度（Retina対応）
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // 4. Blob (画像データ) に変換
+      canvas.toBlob(async (blob) => {
+        const fileName = `金庫引継ぎ_${currentStoreName}_${record.datetime.replace(/[:T-]/g, '')}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        hideLoading();
+
+        // 5. スマホ標準の共有シート（Web Share API）を呼び出し
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: '金庫引継ぎ記録',
+              text: `【${currentStoreName}】金庫引継ぎ記録 (${record.datetime})`
+            });
+          } catch (shareErr) {
+            // ユーザーが共有をキャンセルした場合は何もしない
+            console.log('Share canceled or failed', shareErr);
+          }
+        } else {
+          // PCや非対応ブラウザの場合は自動ダウンロード
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(downloadUrl);
+          alert('画像をダウンロードしました。');
+        }
+      }, 'image/png');
+
     } catch (err) {
-      alert('通信エラー: ' + err.message);
-    } finally {
       hideLoading();
+      alert('エラーが発生しました: ' + err.message);
     }
   }
 
