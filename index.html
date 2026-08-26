@@ -55,14 +55,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    /* エクスポート対象エリア（通常時は通常の見た目） */
-    #export-area {
-      background: #fff;
-      padding: 4px;
-      box-sizing: border-box;
-      width: 100%;
-    }
-
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -301,188 +293,184 @@
 
 <div class="container">
 
-  <!-- 入力画面 -->
+  <!-- 入力画面（普段の操作用） -->
   <div id="input-view" class="view-section">
     
-    <div id="export-area">
-      <div class="header-bar">
-        <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
-        <div class="nav-buttons">
-          <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
-          <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
-          <button class="btn-nav" onclick="showMasterView()">マスタ設定</button>
+    <div class="header-bar">
+      <h1>金庫引継記録 <span class="store-badge" id="current-store-badge">未設定</span></h1>
+      <div class="nav-buttons">
+        <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
+        <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
+        <button class="btn-nav" onclick="showMasterView()">マスタ設定</button>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="info-grid">
+        <div class="field-group full">
+          <label for="datetime">点検日時</label>
+          <input type="datetime-local" id="datetime" onchange="saveFormState()">
         </div>
       </div>
+    </div>
 
-      <div class="section-card">
+    <!-- 1. 金庫内現金実査エリア -->
+    <div class="section-card">
+      <div class="section-title">【1】金庫内現金実査</div>
+      <table>
+        <thead>
+          <tr><th>金種</th><th>区分 / 数量</th><th>金額</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="label-col">10,000円札</td>
+            <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">5,000円札</td>
+            <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">2,000円札</td>
+            <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">1,000円札</td>
+            <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">500円玉 (10枚単位)</td>
+            <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">100円棒金</td>
+            <td><select class="select-count" data-type="roll" data-unit="100" id="roll-100" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">50円棒金</td>
+            <td><select class="select-count" data-type="roll" data-unit="50" id="roll-50" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">10円棒金</td>
+            <td><select class="select-count" data-type="roll" data-unit="10" id="roll-10" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">5円棒金</td>
+            <td><select class="select-count" data-type="roll" data-unit="5" id="roll-5" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">1円棒金</td>
+            <td><select class="select-count" data-type="roll" data-unit="1" id="roll-1" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span class="subtotal">0</span> 円</td>
+          </tr>
+          <tr>
+            <td class="label-col">硬貨バラ（各種）</td>
+            <td><select id="loose-coins" onchange="saveFormState(); calculate();"></select></td>
+            <td class="num-col"><span id="loose-subtotal">0</span> 円</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="summary-card">
+        <div class="summary-row total">
+          <span>実査合計（金庫内現金）</span>
+          <span><strong id="total-amount">0</strong> 円</span>
+        </div>
+        <div class="summary-row">
+          <span>金庫設定金額（理論値）</span>
+          <span><span id="target-amount-disp">200,000</span> 円</span>
+        </div>
+        <div class="summary-row diff highlight-ok" id="diff-container">
+          <span>金庫過不足額</span>
+          <span><strong id="diff-amount">0</strong> 円</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 各レジ過不足状況エリア -->
+    <div class="section-card">
+      <div class="section-title">【2】各レジ過不足状況</div>
+      
+      <!-- 1レジ -->
+      <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
         <div class="info-grid">
-          <div class="field-group full">
-            <label for="datetime">点検日時</label>
-            <input type="datetime-local" id="datetime" onchange="saveFormState()">
+          <div class="field-group">
+            <label for="reg1-staff">1レジ担当者</label>
+            <select id="reg1-staff" onchange="saveFormState(); checkStaffAlert(this.value);"></select>
+          </div>
+          <div class="field-group">
+            <label for="reg1-diff">現金過不足</label>
+            <input type="text" id="reg1-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg1-diff', '1レジ現金過不足')">
+          </div>
+        </div>
+
+        <details class="staff-accordion">
+          <summary>+ リストにないスタッフを新規登録する</summary>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <input type="text" id="quick-new-staff-1" placeholder="スタッフ名を入力">
+            <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-1', 'reg1-staff')">追加</button>
+          </div>
+        </details>
+
+        <div class="coupon-grid">
+          <div class="field-group">
+            <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
+            <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
+          </div>
+          <div class="field-group">
+            <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
+            <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
           </div>
         </div>
       </div>
 
-      <!-- 1. 金庫内現金実査エリア -->
-      <div class="section-card">
-        <div class="section-title">【1】金庫内現金実査</div>
-        <table>
-          <thead>
-            <tr><th>金種</th><th>区分 / 数量</th><th>金額</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="label-col">10,000円札</td>
-              <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">5,000円札</td>
-              <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">2,000円札</td>
-              <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">1,000円札</td>
-              <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">500円玉 (10枚単位)</td>
-              <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">100円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="100" id="roll-100" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">50円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="50" id="roll-50" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">10円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="10" id="roll-10" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">5円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="5" id="roll-5" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">1円棒金</td>
-              <td><select class="select-count" data-type="roll" data-unit="1" id="roll-1" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span class="subtotal">0</span> 円</td>
-            </tr>
-            <tr>
-              <td class="label-col">硬貨バラ（各種）</td>
-              <td><select id="loose-coins" onchange="saveFormState(); calculate();"></select></td>
-              <td class="num-col"><span id="loose-subtotal">0</span> 円</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="summary-card">
-          <div class="summary-row total">
-            <span>実査合計（金庫内現金）</span>
-            <span><strong id="total-amount">0</strong> 円</span>
+      <!-- 2レジ -->
+      <div>
+        <div class="info-grid">
+          <div class="field-group">
+            <label for="reg2-staff">2レジ担当者</label>
+            <select id="reg2-staff" onchange="saveFormState(); checkStaffAlert(this.value);"></select>
           </div>
-          <div class="summary-row">
-            <span>金庫設定金額（理論値）</span>
-            <span><span id="target-amount-disp">200,000</span> 円</span>
-          </div>
-          <div class="summary-row diff highlight-ok" id="diff-container">
-            <span>金庫過不足額</span>
-            <span><strong id="diff-amount">0</strong> 円</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. 各レジ過不足状況エリア -->
-      <div class="section-card">
-        <div class="section-title">【2】各レジ過不足状況</div>
-        
-        <!-- 1レジ -->
-        <div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #ccc;">
-          <div class="info-grid">
-            <div class="field-group">
-              <label for="reg1-staff">1レジ担当者</label>
-              <select id="reg1-staff" onchange="saveFormState(); checkStaffAlert(this.value);"></select>
-            </div>
-            <div class="field-group">
-              <label for="reg1-diff">現金過不足</label>
-              <input type="text" id="reg1-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg1-diff', '1レジ現金過不足')">
-            </div>
-          </div>
-
-          <details class="staff-accordion" id="accordion-1">
-            <summary>+ リストにないスタッフを新規登録する</summary>
-            <div style="display: flex; gap: 6px; margin-top: 4px;">
-              <input type="text" id="quick-new-staff-1" placeholder="スタッフ名を入力">
-              <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-1', 'reg1-staff')">追加</button>
-            </div>
-          </details>
-
-          <div class="coupon-grid">
-            <div class="field-group">
-              <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-              <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
-            </div>
-            <div class="field-group">
-              <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-              <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
-            </div>
+          <div class="field-group">
+            <label for="reg2-diff">現金過不足</label>
+            <input type="text" id="reg2-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg2-diff', '2レジ現金過不足')">
           </div>
         </div>
 
-        <!-- 2レジ -->
-        <div>
-          <div class="info-grid">
-            <div class="field-group">
-              <label for="reg2-staff">2レジ担当者</label>
-              <select id="reg2-staff" onchange="saveFormState(); checkStaffAlert(this.value);"></select>
-            </div>
-            <div class="field-group">
-              <label for="reg2-diff">現金過不足</label>
-              <input type="text" id="reg2-diff" class="numpad-input highlight-ok" value="0円" readonly onclick="openNumpad('reg2-diff', '2レジ現金過不足')">
-            </div>
+        <details class="staff-accordion">
+          <summary>+ リストにないスタッフを新規登録する</summary>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <input type="text" id="quick-new-staff-2" placeholder="スタッフ名を入力">
+            <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-2', 'reg2-staff')">追加</button>
           </div>
+        </details>
 
-          <details class="staff-accordion" id="accordion-2">
-            <summary>+ リストにないスタッフを新規登録する</summary>
-            <div style="display: flex; gap: 6px; margin-top: 4px;">
-              <input type="text" id="quick-new-staff-2" placeholder="スタッフ名を入力">
-              <button class="btn-small" onclick="addNewStaffQuick('quick-new-staff-2', 'reg2-staff')">追加</button>
-            </div>
-          </details>
-
-          <div class="coupon-grid">
-            <div class="field-group">
-              <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-              <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
-            </div>
-            <div class="field-group">
-              <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-              <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
-            </div>
+        <div class="coupon-grid">
+          <div class="field-group">
+            <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
+            <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
+          </div>
+          <div class="field-group">
+            <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
+            <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 備考 -->
-      <div class="field-group full" style="margin-bottom: 4px;">
-        <label for="memo">備考 / 引継ぎ事項</label>
-        <textarea id="memo" rows="2" placeholder="過不足の理由など" oninput="saveFormState()"></textarea>
-      </div>
-
-      <div id="export-report-container" class="export-report-box"></div>
+    <!-- 備考 -->
+    <div class="field-group full" style="margin-bottom: 8px;">
+      <label for="memo">備考 / 引継ぎ事項</label>
+      <textarea id="memo" rows="2" placeholder="過不足の理由など" oninput="saveFormState()"></textarea>
     </div>
 
     <div class="btn-group">
@@ -491,7 +479,7 @@
     </div>
 
     <div id="share-btn-container" style="display: none; margin-top: 8px;">
-      <button class="btn-main btn-success" style="width: 100%;" onclick="generateAndShareImage()">② A4フィードバックシート画像を共有・保存</button>
+      <button class="btn-main btn-success" style="width: 100%;" onclick="generateAndShareA4Report()">② A4公式帳票レポート画像を共有・保存</button>
     </div>
   </div>
 
@@ -556,6 +544,85 @@
     </div>
   </div>
 
+</div>
+
+<!-- ★ 【案2】画面には一切表示されない、画像生成専用の完全独立型A4帳票テンプレート（非表示） -->
+<div id="hidden-a4-report" style="display: none; width: 794px; background: #ffffff; padding: 40px; box-sizing: border-box; font-family: sans-serif; color: #000;">
+  <!-- 帳票ヘッダー -->
+  <div style="text-align: center; border-bottom: 3px solid #111; padding-bottom: 12px; margin-bottom: 20px;">
+    <h2 style="font-size: 1.6rem; margin: 0 0 8px 0; letter-spacing: 2px;">金庫・レジ現金点検 引き継ぎレポート</h2>
+    <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: bold; margin-top: 8px;">
+      <span>所属店舗：<span id="rep-store"></span></span>
+      <span>点検日時：<span id="rep-datetime"></span></span>
+    </div>
+  </div>
+
+  <!-- セクション1：金庫内現金実査 -->
+  <div style="margin-bottom: 20px;">
+    <div style="font-weight: bold; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 8px;">【1】金庫内現金実査</div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: #eee;"><th style="border: 1px solid #333; padding: 6px;">金種</th><th style="border: 1px solid #333; padding: 6px;">数量</th><th style="border: 1px solid #333; padding: 6px;">金額</th></tr>
+      </thead>
+      <tbody id="rep-vault-tbody"></tbody>
+    </table>
+    <div style="border: 2px solid #333; padding: 10px; margin-top: 8px; font-size: 0.95rem;">
+      <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; border-bottom: 1px dashed #666; padding-bottom: 4px; margin-bottom: 4px;">
+        <span>実査合計（金庫内現金）</span><span><span id="rep-vault-total">0</span> 円</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+        <span>金庫設定金額（理論値）</span><span><span id="rep-vault-target">200,000</span> 円</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-weight: bold;" id="rep-vault-diff-wrap">
+        <span>金庫過不足額</span><span><span id="rep-vault-diff">0</span> 円</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- セクション2：各レジ過不足状況 -->
+  <div style="margin-bottom: 20px;">
+    <div style="font-weight: bold; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 8px;">【2】各レジ過不足状況</div>
+    
+    <!-- 1レジ -->
+    <div style="border: 1px solid #666; padding: 8px; margin-bottom: 8px;">
+      <div style="font-weight: bold; margin-bottom: 4px;">■ 1レジ担当: <span id="rep-reg1-staff">未設定</span></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.9rem;">
+        <div>現金過不足: <strong id="rep-reg1-cash">0円</strong></div>
+        <div>無料券過不足: <strong id="rep-reg1-free">0枚</strong></div>
+        <div>割引券過不足: <strong id="rep-reg1-disc">0枚</strong></div>
+      </div>
+    </div>
+
+    <!-- 2レジ -->
+    <div style="border: 1px solid #666; padding: 8px;">
+      <div style="font-weight: bold; margin-bottom: 4px;">■ 2レジ担当: <span id="rep-reg2-staff">未設定</span></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 0.9rem;">
+        <div>現金過不足: <strong id="rep-reg2-cash">0円</strong></div>
+        <div>無料券過不足: <strong id="rep-reg2-free">0枚</strong></div>
+        <div>割引券過不足: <strong id="rep-reg2-disc">0枚</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- セクション3：備考 -->
+  <div style="margin-bottom: 20px;">
+    <div style="font-weight: bold; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 6px;">【3】備考 / 引継ぎ事項</div>
+    <div id="rep-memo" style="border: 1px solid #666; padding: 10px; min-height: 50px; font-size: 0.9rem; background: #fafafa; white-space: pre-wrap;">（特記事項なし）</div>
+  </div>
+
+  <!-- セクション4：個人実績・注意喚起レポート -->
+  <div style="border: 1px solid #333; padding: 10px; margin-bottom: 30px; font-size: 0.85rem; background: #f9f9f9;">
+    <div id="rep-personal-summary"></div>
+    <div style="color: #cc0000; font-weight: bold; margin-top: 6px; font-size: 0.8rem;">
+      【確認事項・注意喚起】過不足発生時はレジ点検レシートと現物を再確認してください。直近3ヶ月の過不足累計が3,000円に達した場合は精算・請求対象となります。
+    </div>
+  </div>
+
+  <!-- 署名欄 -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 2px solid #111; padding-top: 14px;">
+    <div style="border: 1px solid #333; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 12px; font-weight: bold; font-size: 0.85rem;"><span>点検者署名：</span><span>（印）</span></div>
+    <div style="border: 1px solid #333; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 12px; font-weight: bold; font-size: 0.85rem;"><span>責任者確認：</span><span>（印）</span></div>
+  </div>
 </div>
 
 <!-- テンキーモーダル -->
@@ -891,56 +958,6 @@
     }
   }
 
-  function buildReportSummary() {
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const records1M = globalRecords.filter(r => new Date(r.datetime) >= oneMonthAgo);
-
-    const staff1 = document.getElementById('reg1-staff').value;
-    const staff2 = document.getElementById('reg2-staff').value;
-    const currentStaffs = [staff1, staff2].filter(Boolean);
-
-    let summaryHtml = `<strong>【直近1ヶ月 ${currentStoreName} 個人実績・過不足記録】</strong><br>`;
-    
-    if (currentStaffs.length === 0) {
-      summaryHtml += '・担当者未指定<br>';
-    } else {
-      currentStaffs.forEach(name => {
-        let cashMissCount = 0;
-        let cashAbsSum = 0;
-        let freeCouponAbsSum = 0;
-        let discCouponAbsSum = 0;
-
-        records1M.forEach(r => {
-          [r.reg1, r.reg2].forEach(reg => {
-            if (reg && reg.staff === name) {
-              const cashVal = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
-              if (cashVal !== 0) { cashMissCount++; cashAbsSum += Math.abs(cashVal); }
-              freeCouponAbsSum += Math.abs(parseInt(reg.freeCouponDiff, 10) || 0);
-              discCouponAbsSum += Math.abs(parseInt(reg.discCouponDiff, 10) || 0);
-            }
-          });
-        });
-
-        summaryHtml += 
-          `・<strong>${name} スタッフ</strong>: ` +
-          `現金ミス ${cashMissCount}回 (${cashAbsSum.toLocaleString()}円) / ` +
-          `無料券過不足 ${freeCouponAbsSum}枚 / ` +
-          `割引券過不足 ${discCouponAbsSum}枚<br>`;
-      });
-    }
-
-    const noticeHtml = 
-      `<div class="export-notice">` +
-      `【確認事項・注意喚起定型文】<br>` +
-      `1. 過不足発生時は必ずレジ点検レシートとドロア内現物を再確認してください。<br>` +
-      `2. クーポンの回収漏れ・打ち間違いはレジ違算の原因となります。会計時の受け渡しを徹底してください。<br>` +
-      `3. 直近3ヶ月間の過不足金額が累計3,000円に達した場合は精算・請求の対象となります。` +
-      `</div>`;
-
-    document.getElementById('export-report-container').innerHTML = summaryHtml + noticeHtml;
-  }
-
   function resetRegisterOnly() {
     if (confirm('【2】各レジ過不足状況のみをリセットしますか？\n（金庫の入力内容は保持されます）')) {
       document.getElementById('reg1-staff').value = '';
@@ -995,11 +1012,10 @@
       }
 
       globalRecords.push(lastSavedRecord);
-      buildReportSummary();
       hideLoading();
 
       document.getElementById('share-btn-container').style.display = 'block';
-      alert('スプレッドシートへの保存が完了しました！\n下の「② A4フィードバックシート画像を共有・保存」ボタンを押してください。');
+      alert('スプレッドシートへの保存が完了しました！\n下の「② A4公式帳票レポート画像を共有・保存」ボタンを押してください。');
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
     } catch (err) {
@@ -1008,78 +1024,111 @@
     }
   }
 
-  async function generateAndShareImage() {
-    showLoading('A4公式レポートを作成中...');
+  // ★ 【案2】非表示のA4専用テンプレートにデータを流し込んでキャプチャする関数
+  async function generateAndShareA4Report() {
+    if (!lastSavedRecord) return;
+    showLoading('A4公式レポート画像を生成中...');
 
     try {
-      const exportArea = document.getElementById('export-area');
+      // 1. テンプレートへのデータ流し込み
+      document.getElementById('rep-store').textContent = currentStoreName;
+      document.getElementById('rep-datetime').textContent = lastSavedRecord.datetime.replace('T', ' ');
 
-      // 1. 画像化の瞬間だけ「A4公式帳票スタイル（白黒・美しく整ったレイアウト）」に一瞬で変形させる
-      exportArea.style.background = '#ffffff';
-      exportArea.style.padding = '30px';
-      exportArea.style.border = '2px solid #222';
-      exportArea.style.color = '#000';
+      // 金庫実査テーブルの構築
+      const vaultTbody = document.getElementById('rep-vault-tbody');
+      vaultTbody.innerHTML = '';
+      
+      const rowsData = [
+        { label: '10,000円札', count: document.getElementById('bill-10000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[0].textContent },
+        { label: '5,000円札', count: document.getElementById('bill-5000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[1].textContent },
+        { label: '2,000円札', count: document.getElementById('bill-2000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[2].textContent },
+        { label: '1,000円札', count: document.getElementById('bill-1000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[3].textContent },
+        { label: '500円玉 (10枚単位)', count: document.getElementById('coin-500').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[4].textContent },
+        { label: '100円棒金', count: document.querySelectorAll('select[data-type="roll"]')[0].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[5].textContent },
+        { label: '50円棒金', count: document.querySelectorAll('select[data-type="roll"]')[1].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[6].textContent },
+        { label: '10円棒金', count: document.querySelectorAll('select[data-type="roll"]')[2].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[7].textContent },
+        { label: '5円棒金', count: document.querySelectorAll('select[data-type="roll"]')[3].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[8].textContent },
+        { label: '1円棒金', count: document.querySelectorAll('select[data-type="roll"]')[4].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[9].textContent },
+        { label: '硬貨バラ（各種）', count: document.getElementById('loose-coins').selectedOptions[0].text, sub: document.getElementById('loose-subtotal').textContent }
+      ];
 
-      // タイトル（帳票ヘッダー）を生成して最上部に追加
-      let reportHeader = document.getElementById('dynamic-report-header');
-      if (!reportHeader) {
-        reportHeader = document.createElement('div');
-        reportHeader.id = 'dynamic-report-header';
-        reportHeader.style.cssText = 'text-align: center; border-bottom: 2px solid #222; padding-bottom: 10px; margin-bottom: 16px;';
-        exportArea.insertBefore(reportHeader, exportArea.firstChild);
-      }
-      const dtStr = document.getElementById('datetime').value.replace('T', ' ');
-      reportHeader.innerHTML = `
-        <h2 style="font-size: 1.4rem; margin: 0 0 6px 0; letter-spacing: 1px;">金庫・レジ現金点検 引き継ぎレポート</h2>
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; margin-top: 6px;">
-          <span>所属店舗：${currentStoreName}</span>
-          <span>点検日時：${dtStr || '--'}</span>
-        </div>
-      `;
-
-      // 通常時のアプリ用ヘッダーや操作ボタン、アコーディオンを非表示に
-      document.querySelector('.header-bar').style.display = 'none';
-      document.querySelectorAll('.section-card')[0].style.display = 'none'; // 日時カード
-      document.querySelectorAll('.staff-accordion').forEach(el => el.style.display = 'none');
-
-      // セレクトボックスをテキストっぽく綺麗に見せるため、枠線を薄くする
-      document.querySelectorAll('select').forEach(sel => {
-        sel.style.border = '1px solid #ccc';
-        sel.style.background = '#fff';
+      rowsData.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="border: 1px solid #333; padding: 5px; text-align: left; font-weight: bold; background: #fafafa;">${r.label}</td>
+          <td style="border: 1px solid #333; padding: 5px; text-align: center;">${r.count}</td>
+          <td style="border: 1px solid #333; padding: 5px; text-align: right;">${r.sub} 円</td>
+        `;
+        vaultTbody.appendChild(tr);
       });
 
-      // 最下部に「確認・署名欄」を追加
-      let signSec = document.getElementById('dynamic-sign-section');
-      if (!signSec) {
-        signSec = document.createElement('div');
-        signSec.id = 'dynamic-sign-section';
-        signSec.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; border-top: 2px solid #222; padding-top: 12px;';
-        signSec.innerHTML = `
-          <div style="border: 1px solid #666; height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 0.8rem; font-weight: bold;"><span>点検者署名：</span><span>（印）</span></div>
-          <div style="border: 1px solid #666; height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 0.8rem; font-weight: bold;"><span>責任者確認：</span><span>（印）</span></div>
-        `;
-        exportArea.appendChild(signSec);
+      document.getElementById('rep-vault-total').textContent = lastSavedRecord.vaultTotal;
+      document.getElementById('rep-vault-target').textContent = targetVaultAmount.toLocaleString();
+      document.getElementById('rep-vault-diff').textContent = lastSavedRecord.vaultDiff;
+      
+      const diffWrap = document.getElementById('rep-vault-diff-wrap');
+      if (lastSavedRecord.vaultDiff.startsWith('+') || lastSavedRecord.vaultDiff.startsWith('-')) {
+        diffWrap.style.color = '#cc0000';
+      } else {
+        diffWrap.style.color = '#006600';
       }
 
-      // 2. html2canvasでA4幅（794px）に合わせて高品質キャプチャ
-      const canvas = await html2canvas(exportArea, {
+      // レジ情報の流し込み
+      document.getElementById('rep-reg1-staff').textContent = lastSavedRecord.reg1.staff || '未設定';
+      document.getElementById('rep-reg1-cash').textContent = lastSavedRecord.reg1.cashDiff;
+      document.getElementById('rep-reg1-free').textContent = lastSavedRecord.reg1.freeCouponDiff + '枚';
+      document.getElementById('rep-reg1-disc').textContent = lastSavedRecord.reg1.discCouponDiff + '枚';
+
+      document.getElementById('rep-reg2-staff').textContent = lastSavedRecord.reg2.staff || '未設定';
+      document.getElementById('rep-reg2-cash').textContent = lastSavedRecord.reg2.cashDiff;
+      document.getElementById('rep-reg2-free').textContent = lastSavedRecord.reg2.freeCouponDiff + '枚';
+      document.getElementById('rep-reg2-disc').textContent = lastSavedRecord.reg2.discCouponDiff + '枚';
+
+      // 備考の流し込み
+      document.getElementById('rep-memo').textContent = lastSavedRecord.memo || '（特記事項なし）';
+
+      // 個人実績レポートの構築
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      const records1M = globalRecords.filter(r => new Date(r.datetime) >= oneMonthAgo);
+      const currentStaffs = [lastSavedRecord.reg1.staff, lastSavedRecord.reg2.staff].filter(Boolean);
+
+      let pSummaryHtml = '<strong>【直近1ヶ月 個人実績・過不足記録】</strong><br>';
+      if (currentStaffs.length === 0) {
+        pSummaryHtml += '・担当者未指定';
+      } else {
+        currentStaffs.forEach(name => {
+          let cashMissCount = 0;
+          let cashAbsSum = 0;
+          records1M.forEach(r => {
+            [r.reg1, r.reg2].forEach(reg => {
+              if (reg && reg.staff === name) {
+                const val = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
+                if (val !== 0) { cashMissCount++; cashAbsSum += Math.abs(val); }
+              }
+            });
+          });
+          pSummaryHtml += `・<strong>${name}</strong>: 現金ミス ${cashMissCount}回 (${cashAbsSum.toLocaleString()}円)<br>`;
+        });
+      }
+      document.getElementById('rep-personal-summary').innerHTML = pSummaryHtml;
+
+      // 2. 隠しコンテナを一時的に画面上にだけ「表示」させてからhtml2canvasでキャプチャ
+      const hiddenReport = document.getElementById('hidden-a4-report');
+      hiddenReport.style.display = 'block';
+
+      const canvas = await html2canvas(hiddenReport, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         width: 794
       });
 
-      // 3. キャプチャ完了後、画面を通常の操作モードに戻す
-      exportArea.style.padding = '4px';
-      exportArea.style.border = 'none';
-      if (reportHeader) reportHeader.remove();
-      if (signSec) signSec.remove();
-      document.querySelector('.header-bar').style.display = 'flex';
-      document.querySelectorAll('.section-card')[0].style.display = 'block';
-      document.querySelectorAll('.staff-accordion').forEach(el => el.style.display = 'block');
+      // キャプチャが終わったらすぐに非表示に戻す
+      hiddenReport.style.display = 'none';
 
       canvas.toBlob(async (blob) => {
-        const fileDtStr = lastSavedRecord ? lastSavedRecord.datetime : 'file';
+        const fileDtStr = lastSavedRecord.datetime;
         const fileName = `引継ぎレポート_${currentStoreName}_${fileDtStr.replace(/[:T-]/g, '')}.png`;
         const file = new File([blob], fileName, { type: 'image/png' });
 
@@ -1108,15 +1157,7 @@
 
     } catch (err) {
       hideLoading();
-      // エラー時もレイアウトを復旧
-      document.getElementById('export-area').style.padding = '4px';
-      document.getElementById('export-area').style.border = 'none';
-      const rh = document.getElementById('dynamic-report-header'); if (rh) rh.remove();
-      const ss = document.getElementById('dynamic-sign-section'); if (ss) ss.remove();
-      document.querySelector('.header-bar').style.display = 'flex';
-      document.querySelectorAll('.section-card')[0].style.display = 'block';
-      document.querySelectorAll('.staff-accordion').forEach(el => el.style.display = 'block');
-      
+      document.getElementById('hidden-a4-report').style.display = 'none';
       alert('画像生成エラー: ' + err.message);
     }
   }
