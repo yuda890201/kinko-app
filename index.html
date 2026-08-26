@@ -19,6 +19,7 @@
     :root {
       --border-color: #333;
       --primary-color: #0066cc;
+      --success-color: #28a745;
       --bg-color: #f8f9fa;
       --diff-ok-bg: #e6ffe6;
       --diff-ok-color: #006600;
@@ -223,6 +224,7 @@
       cursor: pointer;
     }
     .btn-submit { background-color: var(--primary-color); color: #fff; }
+    .btn-success { background-color: var(--success-color); color: #fff; }
     .btn-reset { background-color: #e0e0e0; color: #333; }
     .btn-danger { background-color: #dc3545; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
     .btn-small { padding: 3px 6px; font-size: 0.75rem; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
@@ -484,7 +486,12 @@
 
     <div class="btn-group">
       <button class="btn-main btn-reset" onclick="resetRegisterOnly()">レジ状況クリア</button>
-      <button class="btn-main btn-submit" id="submit-btn" onclick="submitAndShareImage()">記録保存 ＆ 画像共有</button>
+      <button class="btn-main btn-submit" id="submit-btn" onclick="submitRecordOnly()">① 記録を保存する</button>
+    </div>
+
+    <!-- 保存完了後に出現する画像共有ボタン -->
+    <div id="share-btn-container" style="display: none; margin-top: 8px;">
+      <button class="btn-main btn-success" style="width: 100%;" onclick="generateAndShareImage()">② A4画像を生成して共有・保存する</button>
     </div>
   </div>
 
@@ -608,6 +615,7 @@
   let globalRecords = [];
   let globalStaffList = [];
   let globalStoreList = [];
+  let lastSavedRecord = null; // 共有用の直近保存データ保持
 
   document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
@@ -650,8 +658,6 @@
 
         updateStoreUI();
         renderStaffDropdowns();
-        
-        // フォーム状態の復元
         loadFormState();
         calculate();
       } else {
@@ -751,7 +757,6 @@
     });
   }
 
-  // 入力状態をブラウザに自動保存（ローカルストレージ）
   function saveFormState() {
     const state = {
       'bill-10000': document.getElementById('bill-10000').value,
@@ -778,7 +783,6 @@
     localStorage.setItem('kinko_form_state_' + currentStoreName, JSON.stringify(state));
   }
 
-  // 保存された入力状態を復元
   function loadFormState() {
     const saved = localStorage.getItem('kinko_form_state_' + currentStoreName);
     if (!saved) return;
@@ -948,7 +952,8 @@
     }
   }
 
-  async function submitAndShareImage() {
+  // ステップ1：記録保存ボタン（スプレッドシート送信のみ）
+  async function submitRecordOnly() {
     const staff1 = document.getElementById('reg1-staff').value;
     const staff2 = document.getElementById('reg2-staff').value;
 
@@ -957,7 +962,7 @@
       return;
     }
 
-    const record = {
+    lastSavedRecord = {
       datetime: document.getElementById('datetime').value,
       storeName: currentStoreName,
       reg1: {
@@ -981,17 +986,33 @@
     showLoading('スプレッドシートに保存中...');
 
     try {
-      const res = await callGASApi({ action: 'saveRecord', record: record });
+      const res = await callGASApi({ action: 'saveRecord', record: lastSavedRecord });
       if (res.status !== 'success') {
         alert('保存失敗: ' + res.message);
         hideLoading();
         return;
       }
 
-      globalRecords.push(record);
+      globalRecords.push(lastSavedRecord);
       buildReportSummary();
-      showLoading('A4サイズ画像を作成中...');
+      hideLoading();
 
+      // 保存成功したら「② 画像共有ボタン」を出現させる
+      document.getElementById('share-btn-container').style.display = 'block';
+      alert('スプレッドシートへの保存が完了しました！\n下の「② A4画像を生成して共有・保存する」ボタンを押してください。');
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+    } catch (err) {
+      hideLoading();
+      alert('エラーが発生しました: ' + err.message);
+    }
+  }
+
+  // ステップ2：画像生成＆共有ボタン（ユーザー操作直結で確実にポップアップ）
+  async function generateAndShareImage() {
+    showLoading('A4サイズ画像を作成中...');
+
+    try {
       const exportTarget = document.getElementById('export-area');
       const canvas = await html2canvas(exportTarget, {
         scale: 2,
@@ -1001,7 +1022,8 @@
       });
 
       canvas.toBlob(async (blob) => {
-        const fileName = `金庫引継ぎ_${currentStoreName}_${record.datetime.replace(/[:T-]/g, '')}.png`;
+        const dtStr = lastSavedRecord ? lastSavedRecord.datetime : 'file';
+        const fileName = `金庫引継ぎ_${currentStoreName}_${dtStr.replace(/[:T-]/g, '')}.png`;
         const file = new File([blob], fileName, { type: 'image/png' });
 
         hideLoading();
@@ -1011,7 +1033,7 @@
             await navigator.share({
               files: [file],
               title: '金庫引継ぎ記録',
-              text: `【${currentStoreName}】金庫引継ぎ記録 (${record.datetime})`
+              text: `【${currentStoreName}】金庫引継ぎ記録`
             });
           } catch (shareErr) {
             console.log('Share canceled', shareErr);
@@ -1029,7 +1051,7 @@
 
     } catch (err) {
       hideLoading();
-      alert('エラーが発生しました: ' + err.message);
+      alert('画像生成エラー: ' + err.message);
     }
   }
 
