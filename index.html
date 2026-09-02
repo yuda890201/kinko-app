@@ -1044,6 +1044,19 @@ try {
     });
   }
 
+  // 過不足の金額文字列("-1,000円"や"-3"など)を数値に変換
+  function parseAmountVal(v) {
+    return parseInt(String(v == null ? '0' : v).replace(/[^0-9-]/g, ''), 10) || 0;
+  }
+
+  // スタッフ集計用の過不足額を取得。前回記録との差分(今回新たに発生した分)を優先し、
+  // 差分が記録されていない古いデータは実測値をそのまま使う(後方互換)。
+  function getRegDiffForStats(reg, field) {
+    const deltaField = field + 'Delta';
+    if (reg && typeof reg[deltaField] === 'number') return reg[deltaField];
+    return parseAmountVal(reg && reg[field]);
+  }
+
   function checkStaffAlert(staffName) {
     if (!staffName) return;
     const threeMonthsAgo = new Date();
@@ -1054,7 +1067,7 @@ try {
     records3M.forEach(r => {
       [r.reg1, r.reg2].forEach(reg => {
         if (reg && reg.staff === staffName) {
-          const val = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
+          const val = getRegDiffForStats(reg, 'cashDiff');
           if (val !== 0) totalAbsDiff3M += Math.abs(val);
         }
       });
@@ -1113,6 +1126,17 @@ try {
       vaultDiff: document.getElementById('diff-amount').textContent,
       memo: document.getElementById('memo').value
     };
+
+    // 前回記録(同じ店舗で直前の記録)との差分を、今回新たに発生した過不足としてレジごとに算出する。
+    // これにより、前回の未精算分がそのまま引き継がれても次の担当者のミスとして二重集計されない。
+    const prevRecord = globalRecords.find(r => r.datetime < lastSavedRecord.datetime) || null;
+    ['reg1', 'reg2'].forEach(regKey => {
+      const prevReg = prevRecord ? prevRecord[regKey] : null;
+      ['cashDiff', 'freeCouponDiff', 'discCouponDiff'].forEach(field => {
+        lastSavedRecord[regKey][field + 'Delta'] =
+          parseAmountVal(lastSavedRecord[regKey][field]) - parseAmountVal(prevReg && prevReg[field]);
+      });
+    });
 
     showLoading('Firestoreに保存中...');
 
@@ -1215,7 +1239,7 @@ try {
           records1M.forEach(r => {
             [r.reg1, r.reg2].forEach(reg => {
               if (reg && reg.staff === name) {
-                const val = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
+                const val = getRegDiffForStats(reg, 'cashDiff');
                 if (val !== 0) { cashMissCount++; cashAbsSum += Math.abs(val); }
               }
             });
@@ -1309,11 +1333,18 @@ try {
       } else {
         matchedRecords.forEach(r => {
           const timeStr = r.datetime.slice(11, 16);
+          const fmtDelta = v => (v > 0 ? '+' : '') + v.toLocaleString();
+          const deltaLine = reg => {
+            if (typeof reg.cashDiffDelta !== 'number') return '';
+            return `　→ 今回発生分(前回記録との差分): 現金${fmtDelta(reg.cashDiffDelta)}円 / 無料${fmtDelta(reg.freeCouponDiffDelta)}枚 / 割引${fmtDelta(reg.discCouponDiffDelta)}枚<br>`;
+          };
           contentHtml += `
             <div class="shift-detail" style="border-bottom:1px dashed #eee; padding-bottom:4px; margin-bottom:4px;">
               <strong>[${timeStr}]</strong><br>
               ・1レジ: ${r.reg1.staff || '未設定'} (現金:${r.reg1.cashDiff} / 無料:${r.reg1.freeCouponDiff}枚 / 割引:${r.reg1.discCouponDiff}枚)<br>
+              ${deltaLine(r.reg1)}
               ・2レジ: ${r.reg2.staff || '未設定'} (現金:${r.reg2.cashDiff} / 無料:${r.reg2.freeCouponDiff}枚 / 割引:${r.reg2.discCouponDiff}枚)<br>
+              ${deltaLine(r.reg2)}
               ・金庫過不足: <strong>${r.vaultDiff}</strong> (${r.vaultTotal}円)<br>
               ${r.memo ? `・備考: ${r.memo}` : ''}
             </div>
@@ -1335,7 +1366,7 @@ try {
       [r.reg1, r.reg2].forEach(reg => {
         if (reg && reg.staff) {
           const name = reg.staff;
-          const val = parseInt(reg.cashDiff.replace(/[^0-9-]/g, ''), 10) || 0;
+          const val = getRegDiffForStats(reg, 'cashDiff');
           if (!stats[name]) stats[name] = { plusCount: 0, plusSum: 0, minusCount: 0, minusSum: 0, totalAbs: 0 };
           if (val > 0) { stats[name].plusCount++; stats[name].plusSum += val; }
           else if (val < 0) { stats[name].minusCount++; stats[name].minusSum += val; }
