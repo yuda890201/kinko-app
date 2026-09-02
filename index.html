@@ -15,6 +15,11 @@
   <!-- 画面キャプチャ用ライブラリ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+  <!-- Firebase (Firestore + Authentication) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
       --border-color: #333;
@@ -283,9 +288,47 @@
       flex-direction: column;
       font-weight: bold;
     }
+
+    #login-overlay {
+      display: flex;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color);
+      z-index: 3000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    #login-overlay .login-box {
+      background: #fff;
+      width: 100%;
+      max-width: 340px;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    #login-overlay h2 { margin: 0 0 16px; font-size: 1.1rem; text-align: center; }
+    #login-overlay .field-group { margin-bottom: 12px; }
+    #login-error { color: #cc0000; font-size: 0.8rem; min-height: 1.2em; margin-top: 4px; }
   </style>
 </head>
 <body>
+
+<div id="login-overlay">
+  <form id="login-form" class="login-box">
+    <h2>スタッフ用金庫引継ぎ記録</h2>
+    <div class="field-group">
+      <label for="login-email">メールアドレス</label>
+      <input type="email" id="login-email" required autocomplete="username">
+    </div>
+    <div class="field-group">
+      <label for="login-password">パスワード</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn-main btn-submit" style="width:100%;">ログイン</button>
+    <p id="login-error"></p>
+  </form>
+</div>
 
 <div id="loading-overlay">
   <div id="loading-msg">通信中...</div>
@@ -302,6 +345,7 @@
         <button class="btn-nav" onclick="showArchiveView()">アーカイブ</button>
         <button class="btn-nav" onclick="showSummaryView()">6ヶ月集計</button>
         <button class="btn-nav" onclick="showMasterView()">マスタ設定</button>
+        <button class="btn-nav" onclick="signOutUser()">ログアウト</button>
       </div>
     </div>
 
@@ -672,9 +716,34 @@
 </div>
 
 <script>
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzIXOdiv0WWhEit_0n_WFxh-f_KN0RcvGneG8ZMQUyggrylqimPsbyG1bUVEIz5GL5u/exec';
+// =================================================================
+// 【Firebase設定】Firebaseコンソール「プロジェクトの設定」→「マイアプリ」で取得できる値を貼り付けてください。
+// この値は公開情報です(秘密鍵ではありません)。アクセス制御は firestore.rules 側で行います。
+// =================================================================
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+let auth = null;
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+} catch (err) {
+  console.error('Firebase初期化に失敗しました。firebaseConfigを確認してください。', err);
+}
+</script>
 
-  let currentStoreName = localStorage.getItem('kinko_selected_store') || '1号店';
+<script>
+  let currentUser = null;
+
+  let currentStoreId = localStorage.getItem('kinko_selected_store_id') || '';
+  let currentStoreName = '1号店';
   let targetVaultAmount = 200000;
   let currentTargetInputId = '';
   let allowNegativeInput = true;
@@ -691,8 +760,47 @@
     document.getElementById('archive-date').value = now.toISOString().slice(0, 10);
 
     initDropdowns();
-    fetchData();
+
+    document.getElementById('login-form').addEventListener('submit', handleLoginSubmit);
+
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        currentUser = user;
+        if (user) {
+          document.getElementById('login-overlay').style.display = 'none';
+          fetchData();
+        } else {
+          document.getElementById('login-overlay').style.display = 'flex';
+        }
+      });
+    } else {
+      document.getElementById('login-error').textContent = 'Firebase設定が未完了です。index.html内のfirebaseConfigを確認してください。';
+    }
   });
+
+  async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    if (!auth) {
+      errEl.textContent = 'Firebase設定が未完了です。';
+      return;
+    }
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch (err) {
+      errEl.textContent = 'ログインに失敗しました: ' + err.message;
+    }
+  }
+
+  function signOutUser() {
+    if (!auth) return;
+    if (confirm('ログアウトしますか？')) {
+      auth.signOut();
+    }
+  }
 
   function showLoading(msg = '通信中...') {
     const el = document.getElementById('loading-overlay');
@@ -701,35 +809,38 @@
   }
   function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
 
-  async function callGASApi(payload) {
-    const res = await fetch(GAS_API_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      redirect: 'follow',
-      mode: 'cors'
-    });
-    if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
-    return await res.json();
-  }
-
   async function fetchData() {
-    showLoading('スプレッドシートからデータ取得中...');
+    if (!currentUser) return;
+    showLoading('Firestoreからデータ取得中...');
     try {
-      const data = await callGASApi({ action: 'getInitialData', storeName: currentStoreName });
-      if (data.status === 'success') {
-        globalStoreList = data.storeList || [];
-        globalStaffList = data.staffList || [];
-        globalRecords = data.records || [];
-        targetVaultAmount = data.targetVaultAmount || 200000;
-
-        updateStoreUI();
-        renderStaffDropdowns();
-        loadFormState();
-        calculate();
+      const storeMasterDoc = await db.collection('meta').doc('storeMaster').get();
+      if (storeMasterDoc.exists && storeMasterDoc.data().stores && storeMasterDoc.data().stores.length > 0) {
+        globalStoreList = storeMasterDoc.data().stores;
       } else {
-        alert('取得エラー: ' + data.message);
+        globalStoreList = [{ id: 'store_default', name: '1号店', target: 200000 }];
+        await db.collection('meta').doc('storeMaster').set({ stores: globalStoreList });
       }
+
+      if (!currentStoreId || !globalStoreList.some(s => s.id === currentStoreId)) {
+        currentStoreId = globalStoreList[0].id;
+        localStorage.setItem('kinko_selected_store_id', currentStoreId);
+      }
+
+      const storeObj = globalStoreList.find(s => s.id === currentStoreId);
+      currentStoreName = storeObj.name;
+      targetVaultAmount = storeObj.target || 200000;
+
+      const configDoc = await db.collection('storesConfig').doc(currentStoreId).get();
+      globalStaffList = (configDoc.exists && configDoc.data().staffList) || [];
+
+      const recordsSnap = await db.collection('storesConfig').doc(currentStoreId)
+        .collection('records').orderBy('datetime', 'desc').limit(2000).get();
+      globalRecords = recordsSnap.docs.map(d => d.data());
+
+      updateStoreUI();
+      renderStaffDropdowns();
+      loadFormState();
+      calculate();
     } catch (err) {
       alert('通信エラー: ' + err.message);
     } finally {
@@ -760,6 +871,7 @@
   }
 
   async function addNewStaffQuick(inputId, targetSelectId) {
+    if (!currentUser) return;
     const inputEl = document.getElementById(inputId);
     const name = inputEl.value.trim();
     if (!name) {
@@ -773,17 +885,16 @@
 
     showLoading('スタッフ追加中...');
     try {
-      const res = await callGASApi({ action: 'addStaff', storeName: currentStoreName, staffName: name });
-      if (res.status === 'success') {
-        globalStaffList.push(name);
-        renderStaffDropdowns();
-        document.getElementById(targetSelectId).value = name;
-        inputEl.value = '';
-        inputEl.closest('details').open = false;
-        saveFormState();
-      } else {
-        alert('追加エラー: ' + res.message);
-      }
+      await db.collection('storesConfig').doc(currentStoreId).set({
+        staffList: firebase.firestore.FieldValue.arrayUnion(name)
+      }, { merge: true });
+
+      globalStaffList.push(name);
+      renderStaffDropdowns();
+      document.getElementById(targetSelectId).value = name;
+      inputEl.value = '';
+      inputEl.closest('details').open = false;
+      saveFormState();
     } catch (err) {
       alert('通信エラー: ' + err.message);
     } finally {
@@ -972,6 +1083,7 @@
   }
 
   async function submitRecordOnly() {
+    if (!currentUser) return;
     const staff1 = document.getElementById('reg1-staff').value;
     const staff2 = document.getElementById('reg2-staff').value;
 
@@ -982,6 +1094,7 @@
 
     lastSavedRecord = {
       datetime: document.getElementById('datetime').value,
+      storeId: currentStoreId,
       storeName: currentStoreName,
       reg1: {
         staff: staff1,
@@ -1001,17 +1114,16 @@
       memo: document.getElementById('memo').value
     };
 
-    showLoading('スプレッドシートに保存中...');
+    showLoading('Firestoreに保存中...');
 
     try {
-      const res = await callGASApi({ action: 'saveRecord', record: lastSavedRecord });
-      if (res.status !== 'success') {
-        alert('保存失敗: ' + res.message);
-        hideLoading();
-        return;
-      }
+      await db.collection('storesConfig').doc(currentStoreId)
+        .collection('records').add({
+          ...lastSavedRecord,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-      globalRecords.push(lastSavedRecord);
+      globalRecords.unshift(lastSavedRecord);
       hideLoading();
 
       document.getElementById('share-btn-container').style.display = 'block';
@@ -1262,44 +1374,47 @@
     const select = document.getElementById('master-store-select');
     select.innerHTML = '';
     globalStoreList.forEach(s => {
-      const opt = new Option(s.name, s.name);
-      if (s.name === currentStoreName) opt.selected = true;
+      const opt = new Option(s.name, s.id);
+      if (s.id === currentStoreId) opt.selected = true;
       select.options.add(opt);
     });
   }
 
   function onMasterStoreChanged() {
-    const selected = document.getElementById('master-store-select').value;
-    const storeObj = globalStoreList.find(s => s.name === selected);
+    const selectedId = document.getElementById('master-store-select').value;
+    const storeObj = globalStoreList.find(s => s.id === selectedId);
     if (storeObj) {
       document.getElementById('master-target').value = storeObj.target.toLocaleString() + '円';
     }
   }
 
   async function saveStoreMasterSettings() {
-    const newStore = document.getElementById('new-store-name').value.trim();
-    const selectStore = document.getElementById('master-store-select').value;
-    const targetStore = newStore || selectStore || '1号店';
+    if (!currentUser) return;
+    const newStoreName = document.getElementById('new-store-name').value.trim();
+    const selectedId = document.getElementById('master-store-select').value;
     const rawVal = document.getElementById('master-target').value.replace(/[^0-9]/g, '');
     const targetAmt = parseInt(rawVal, 10) || 200000;
 
     showLoading('店舗設定を保存中...');
     try {
-      const res = await callGASApi({
-        action: 'saveStoreSettings',
-        storeName: targetStore,
-        targetVaultAmount: targetAmt
-      });
-      if (res.status === 'success') {
-        currentStoreName = targetStore;
-        localStorage.setItem('kinko_selected_store', currentStoreName);
-        document.getElementById('new-store-name').value = '';
-        await fetchData();
-        alert(`所属店舗を「${targetStore}」に設定しました。`);
-        showView('input-view');
+      let targetId;
+      if (newStoreName) {
+        targetId = 'store_' + Date.now().toString(36);
+        globalStoreList.push({ id: targetId, name: newStoreName, target: targetAmt });
       } else {
-        alert('保存エラー: ' + res.message);
+        targetId = selectedId || (globalStoreList[0] && globalStoreList[0].id);
+        const storeObj = globalStoreList.find(s => s.id === targetId);
+        if (storeObj) storeObj.target = targetAmt;
       }
+
+      await db.collection('meta').doc('storeMaster').set({ stores: globalStoreList });
+
+      currentStoreId = targetId;
+      localStorage.setItem('kinko_selected_store_id', currentStoreId);
+      document.getElementById('new-store-name').value = '';
+      await fetchData();
+      alert(`所属店舗を「${currentStoreName}」に設定しました。`);
+      showView('input-view');
     } catch (err) {
       alert('通信エラー: ' + err.message);
     } finally {
@@ -1325,17 +1440,17 @@
   }
 
   async function deleteStaff(name) {
+    if (!currentUser) return;
     if (confirm(`【${currentStoreName}】から「${name}」スタッフを削除しますか？`)) {
       showLoading('スタッフ削除中...');
       try {
-        const res = await callGASApi({ action: 'deleteStaff', storeName: currentStoreName, staffName: name });
-        if (res.status === 'success') {
-          globalStaffList = globalStaffList.filter(n => n !== name);
-          renderStaffDropdowns();
-          renderStaffMaster();
-        } else {
-          alert('削除エラー: ' + res.message);
-        }
+        await db.collection('storesConfig').doc(currentStoreId).set({
+          staffList: firebase.firestore.FieldValue.arrayRemove(name)
+        }, { merge: true });
+
+        globalStaffList = globalStaffList.filter(n => n !== name);
+        renderStaffDropdowns();
+        renderStaffMaster();
       } catch (err) {
         alert('通信エラー: ' + err.message);
       } finally {
