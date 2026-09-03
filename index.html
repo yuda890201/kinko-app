@@ -11,6 +11,9 @@
   <link rel="apple-touch-icon" sizes="180x180" href="kinko.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="金庫引継ぎ">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <!-- Web Appマニフェスト: ホーム画面追加アプリをPWAとして認識させ、iOSのストレージ自動消去(ITP)の対象から除外するため -->
+  <link rel="manifest" href="manifest.json">
 
   <!-- 画面キャプチャ用ライブラリ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -734,8 +737,15 @@ try {
   firebase.initializeApp(firebaseConfig);
   auth = firebase.auth();
   db = firebase.firestore();
+  // ログイン状態をブラウザに永続化し、次回起動時も自動ログインさせる(明示的に指定してデフォルト挙動を保証)
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 } catch (err) {
   console.error('Firebase初期化に失敗しました。firebaseConfigを確認してください。', err);
+}
+
+// iOSのホーム画面追加アプリ等でストレージが自動消去されにくくするよう、永続ストレージを要求する
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
 }
 </script>
 
