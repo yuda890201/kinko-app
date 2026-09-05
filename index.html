@@ -356,7 +356,7 @@
       <div class="info-grid">
         <div class="field-group full">
           <label for="datetime">点検日時</label>
-          <input type="datetime-local" id="datetime" onchange="saveFormState()">
+          <input type="datetime-local" id="datetime" onchange="saveFormState(); updateHighlights();">
         </div>
       </div>
     </div>
@@ -446,7 +446,9 @@
     <!-- 2. 各レジ過不足状況エリア -->
     <div class="section-card">
       <div class="section-title">【2】各レジ過不足状況</div>
-      
+
+      <div id="prev-reg-info" style="font-size: 0.78rem; color: #555; background: #f5f7fa; border: 1px solid #ddd; border-radius: 4px; padding: 6px 8px; margin-bottom: 10px; line-height: 1.5;"></div>
+
       <!-- 1レジ -->
       <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc;">
         <div class="info-grid">
@@ -478,6 +480,8 @@
             <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
           </div>
         </div>
+
+        <div class="delta-preview" id="reg1-delta-preview" style="font-size: 0.78rem; margin-top: 6px; font-weight: bold;"></div>
       </div>
 
       <!-- 2レジ -->
@@ -511,6 +515,8 @@
             <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
           </div>
         </div>
+
+        <div class="delta-preview" id="reg2-delta-preview" style="font-size: 0.78rem; margin-top: 6px; font-weight: bold;"></div>
       </div>
     </div>
 
@@ -1052,6 +1058,8 @@ if (navigator.storage && navigator.storage.persist) {
         el.classList.add('highlight-ok'); el.classList.remove('highlight-ng');
       }
     });
+
+    refreshPrevRegDisplays();
   }
 
   // 過不足の金額文字列("-1,000円"や"-3"など)を数値に変換
@@ -1065,6 +1073,48 @@ if (navigator.storage && navigator.storage.persist) {
     const deltaField = field + 'Delta';
     if (reg && typeof reg[deltaField] === 'number') return reg[deltaField];
     return parseAmountVal(reg && reg[field]);
+  }
+
+  // 指定した日時より前で最も新しい記録(同じ店舗)を取得する。前回の過不足の基準として使う。
+  function findPreviousRecord(beforeDatetime) {
+    return globalRecords.find(r => r.datetime < beforeDatetime) || null;
+  }
+
+  // 「前回の記録」情報と、現在入力中の値から「今回発生分(前回との差分)」をレジごとに表示する
+  function refreshPrevRegDisplays() {
+    const prevInfoEl = document.getElementById('prev-reg-info');
+    const dtEl = document.getElementById('datetime');
+    if (!prevInfoEl || !dtEl) return;
+    const dt = dtEl.value;
+    const prevRecord = findPreviousRecord(dt);
+
+    if (!prevRecord) {
+      prevInfoEl.textContent = '📋 前回の記録: なし(この店舗で最初の記録です)';
+    } else {
+      const timeStr = prevRecord.datetime.replace('T', ' ');
+      prevInfoEl.innerHTML =
+        `📋 前回の記録(${timeStr})<br>` +
+        `・1レジ${prevRecord.reg1.staff ? '(' + prevRecord.reg1.staff + ')' : ''}: 現金${prevRecord.reg1.cashDiff} / 無料${prevRecord.reg1.freeCouponDiff}枚 / 割引${prevRecord.reg1.discCouponDiff}枚<br>` +
+        `・2レジ${prevRecord.reg2.staff ? '(' + prevRecord.reg2.staff + ')' : ''}: 現金${prevRecord.reg2.cashDiff} / 無料${prevRecord.reg2.freeCouponDiff}枚 / 割引${prevRecord.reg2.discCouponDiff}枚`;
+    }
+
+    const fmt = v => (v > 0 ? '+' : '') + v.toLocaleString();
+    ['reg1', 'reg2'].forEach(regKey => {
+      const previewEl = document.getElementById(regKey + '-delta-preview');
+      if (!previewEl) return;
+      const prevReg = prevRecord ? prevRecord[regKey] : null;
+      const cashDelta = parseAmountVal(document.getElementById(regKey + '-diff').value) - parseAmountVal(prevReg && prevReg.cashDiff);
+      const freeDelta = parseAmountVal(document.getElementById(regKey + '-free-coupon').value) - parseAmountVal(prevReg && prevReg.freeCouponDiff);
+      const discDelta = parseAmountVal(document.getElementById(regKey + '-disc-coupon').value) - parseAmountVal(prevReg && prevReg.discCouponDiff);
+
+      if (cashDelta === 0 && freeDelta === 0 && discDelta === 0) {
+        previewEl.textContent = '→ 今回発生分: なし(前回から変化なし)';
+        previewEl.style.color = '#006600';
+      } else {
+        previewEl.textContent = `→ 今回発生分: 現金${fmt(cashDelta)}円 / 無料${fmt(freeDelta)}枚 / 割引${fmt(discDelta)}枚`;
+        previewEl.style.color = '#cc0000';
+      }
+    });
   }
 
   function checkStaffAlert(staffName) {
@@ -1139,7 +1189,7 @@ if (navigator.storage && navigator.storage.persist) {
 
     // 前回記録(同じ店舗で直前の記録)との差分を、今回新たに発生した過不足としてレジごとに算出する。
     // これにより、前回の未精算分がそのまま引き継がれても次の担当者のミスとして二重集計されない。
-    const prevRecord = globalRecords.find(r => r.datetime < lastSavedRecord.datetime) || null;
+    const prevRecord = findPreviousRecord(lastSavedRecord.datetime);
     ['reg1', 'reg2'].forEach(regKey => {
       const prevReg = prevRecord ? prevRecord[regKey] : null;
       ['cashDiff', 'freeCouponDiff', 'discCouponDiff'].forEach(field => {
