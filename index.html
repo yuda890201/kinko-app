@@ -1075,18 +1075,45 @@ if (navigator.storage && navigator.storage.persist) {
     return parseAmountVal(reg && reg[field]);
   }
 
-  // 指定した日時より前で最も新しい記録(同じ店舗)を取得する。前回の過不足の基準として使う。
+  // ローカルキャッシュ(globalRecords)から、指定日時より前で最も新しい記録を取得する。
+  // 他端末の保存内容を反映していない可能性があるため、Firestoreへの問い合わせが
+  // 失敗した場合のフォールバックとしてのみ使う。
   function findPreviousRecord(beforeDatetime) {
     return globalRecords.find(r => r.datetime < beforeDatetime) || null;
   }
 
+  // 他端末が保存した最新の記録も取りこぼさないよう、その都度Firestoreへ直接問い合わせて
+  // 「前回の記録」を取得する。通信に失敗した場合のみローカルキャッシュにフォールバックする。
+  async function fetchPreviousRecordFromFirestore(beforeDatetime) {
+    if (db && currentStoreId) {
+      try {
+        const snap = await db.collection('storesConfig').doc(currentStoreId)
+          .collection('records')
+          .where('datetime', '<', beforeDatetime)
+          .orderBy('datetime', 'desc')
+          .limit(1)
+          .get();
+        return snap.empty ? null : snap.docs[0].data();
+      } catch (err) {
+        console.warn('前回記録の取得に失敗したため、ローカルキャッシュを使用します:', err);
+      }
+    }
+    return findPreviousRecord(beforeDatetime);
+  }
+
+  let prevRegDisplaysRequestId = 0;
+
   // 「前回の記録」情報と、現在入力中の値から「今回発生分(前回との差分)」をレジごとに表示する
-  function refreshPrevRegDisplays() {
+  async function refreshPrevRegDisplays() {
     const prevInfoEl = document.getElementById('prev-reg-info');
     const dtEl = document.getElementById('datetime');
     if (!prevInfoEl || !dtEl) return;
     const dt = dtEl.value;
-    const prevRecord = findPreviousRecord(dt);
+
+    const requestId = ++prevRegDisplaysRequestId;
+    prevInfoEl.textContent = '📋 前回の記録を確認中...';
+    const prevRecord = await fetchPreviousRecordFromFirestore(dt);
+    if (requestId !== prevRegDisplaysRequestId) return; // 後から発行された新しいリクエストの結果を優先する
 
     if (!prevRecord) {
       prevInfoEl.textContent = '📋 前回の記録: なし(この店舗で最初の記録です)';
@@ -1189,7 +1216,9 @@ if (navigator.storage && navigator.storage.persist) {
 
     // 前回記録(同じ店舗で直前の記録)との差分を、今回新たに発生した過不足としてレジごとに算出する。
     // これにより、前回の未精算分がそのまま引き継がれても次の担当者のミスとして二重集計されない。
-    const prevRecord = findPreviousRecord(lastSavedRecord.datetime);
+    // ローカルキャッシュ(globalRecords)は他端末の保存内容を反映していない場合があるため、
+    // 保存直前にFirestoreへ直接問い合わせて最新の前回記録を取得する。
+    const prevRecord = await fetchPreviousRecordFromFirestore(lastSavedRecord.datetime);
     ['reg1', 'reg2'].forEach(regKey => {
       const prevReg = prevRecord ? prevRecord[regKey] : null;
       ['cashDiff', 'freeCouponDiff', 'discCouponDiff'].forEach(field => {
