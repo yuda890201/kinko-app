@@ -778,6 +778,15 @@ if (navigator.storage && navigator.storage.persist) {
 
     if (auth) {
       auth.onAuthStateChanged(user => {
+        // 以前の匿名認証時代からの古いセッションが端末に残っていると、
+        // ここでuserが存在してしまいPIN入力をスキップしてしまう。
+        // 匿名ユーザーにはemailがなく店舗共通アカウントとして書き込めないため、
+        // 読み取りはできるのに保存だけ失敗する不具合の原因になっていた。
+        // 匿名セッションは正規のログインとして扱わず、サインアウトしてPIN入力へ戻す。
+        if (user && user.isAnonymous) {
+          auth.signOut();
+          return;
+        }
         currentUser = user;
         if (user) {
           document.getElementById('login-overlay').style.display = 'none';
