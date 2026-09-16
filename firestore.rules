@@ -1,8 +1,31 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isStoreAccount() {
+      return isSignedIn()
+             && request.auth.token.email == 'staff@kinko-app-2f5e4.local';
+    }
+
+    // 店舗マスタ: ログイン済みなら読める(閲覧専用アカウント含む)。書き込みは店舗共通アカウントのみ
+    match /meta/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isStoreAccount();
+    }
+
+    match /storesConfig/{storeId} {
+      allow read: if isSignedIn();
+      allow write: if isStoreAccount();
+
+      // 引継ぎ記録: 追記のみ。過去記録の更新・削除は禁止(改ざん防止)
+      match /records/{recordId} {
+        allow read: if isSignedIn();
+        allow create: if isStoreAccount();
+        allow update, delete: if false;
+      }
     }
   }
 }
