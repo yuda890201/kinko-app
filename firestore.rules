@@ -5,25 +5,42 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    function isStoreAccount() {
+    function isOwner() {
       return isSignedIn()
-             && request.auth.token.email == 'staff@kinko-app-2f5e4.local';
+             && request.auth.token.email == 'owner-493dbedc@kinko-app-2f5e4.local';
+    }
+    // 店舗ごとのログイン用メールアドレス対応表(meta/storeLoginDirectory)と突き合わせて、
+    // そのstoreIdの店舗専用アカウントかどうかを判定する。対応表に無いstoreIdは一致せず拒否される。
+    function isStoreAccount(storeId) {
+      return isSignedIn()
+             && request.auth.token.email ==
+                get(/databases/$(database)/documents/meta/storeLoginDirectory).data.stores.get(storeId, null);
     }
 
-    // 店舗マスタ: ログイン済みなら読める(閲覧専用アカウント含む)。書き込みは店舗共通アカウントのみ
+    // 店舗ID⇔ログイン用メールアドレスの対応表。ログイン画面がPIN入力だけで
+    // 店舗を特定できるよう、認証前(未ログイン)でも読み取れる必要があるため公開読み取り。
+    // 中身はメールアドレスのみで、パスワード(PIN)自体はFirebase Authが保護しているため、
+    // 公開してもPINが漏れることはない。書き込みはオーナーのみ。
+    match /meta/storeLoginDirectory {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // 店舗マスタ・その他meta設定: 読み取りはログイン済みなら可(閲覧専用アカウント含む)。
+    // 書き込みはオーナーのみ(店舗専用アカウントは自店舗の設定以外を書き換えられないようにするため)。
     match /meta/{doc} {
       allow read: if isSignedIn();
-      allow write: if isStoreAccount();
+      allow write: if isOwner();
     }
 
     match /storesConfig/{storeId} {
       allow read: if isSignedIn();
-      allow write: if isStoreAccount();
+      allow write: if isOwner() || isStoreAccount(storeId);
 
       // 引継ぎ記録: 追記のみ。過去記録の更新・削除は禁止(改ざん防止)
       match /records/{recordId} {
         allow read: if isSignedIn();
-        allow create: if isStoreAccount();
+        allow create: if isOwner() || isStoreAccount(storeId);
         allow update, delete: if false;
       }
     }

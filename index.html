@@ -321,8 +321,8 @@
   <form id="login-form" class="login-box">
     <h2>スタッフ用金庫引継ぎ記録</h2>
     <div class="field-group">
-      <label for="login-pin">店舗共通PINコード</label>
-      <input type="password" id="login-pin" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" required
+      <label for="login-pin">店舗PINコード</label>
+      <input type="password" id="login-pin" autocomplete="current-password" required
         style="font-size:1.3rem; text-align:center; letter-spacing:4px;" placeholder="PINコードを入力">
     </div>
     <button type="submit" class="btn-main btn-submit" style="width:100%;">ログイン</button>
@@ -568,7 +568,7 @@
       <button class="btn-nav" onclick="showView('input-view')">入力画面へ戻る</button>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" id="owner-store-settings-card">
       <div class="section-title">自端末の所属店舗設定</div>
       <div class="field-group" style="margin-bottom: 8px;">
         <label for="master-store-select">所属店舗を選択</label>
@@ -584,6 +584,9 @@
       </div>
       <button class="btn-main btn-submit" style="width: 100%;" onclick="saveStoreMasterSettings()">店舗・設定金額を確定保存</button>
     </div>
+    <p id="locked-store-notice" style="display:none; font-size:0.85rem;color:#666;padding:0 4px;">
+      このPINコードは「<span id="locked-store-notice-name"></span>」専用です。店舗の切替・新規追加はオーナーPINでログインしてください。
+    </p>
 
     <div class="section-card">
       <div class="section-title"><span id="staff-master-store-label"></span> スタッフ管理</div>
@@ -754,6 +757,8 @@ if (navigator.storage && navigator.storage.persist) {
 
 <script>
   let currentUser = null;
+  let isOwnerSession = false;
+  let lockedStoreId = null; // 店舗専用PINでログインした場合、その店舗のIDが入る(店舗切替不可)
 
   let currentStoreId = localStorage.getItem('kinko_selected_store_id') || '';
   let currentStoreName = '1号店';
@@ -764,6 +769,7 @@ if (navigator.storage && navigator.storage.persist) {
   let globalRecords = [];
   let globalStaffList = [];
   let globalStoreList = [];
+  let storeLoginDirectory = null; // { stores: { [storeId]: loginEmail } }
   let lastSavedRecord = null;
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -790,8 +796,10 @@ if (navigator.storage && navigator.storage.persist) {
         currentUser = user;
         if (user) {
           document.getElementById('login-overlay').style.display = 'none';
-          fetchData();
+          resolveSessionRole().then(fetchData);
         } else {
+          isOwnerSession = false;
+          lockedStoreId = null;
           document.getElementById('login-overlay').style.display = 'flex';
         }
       });
@@ -800,12 +808,43 @@ if (navigator.storage && navigator.storage.persist) {
     }
   });
 
-  // 店舗共通PINコード方式のログイン。
-  // Firebase Authenticationに、固定のダミーメールアドレス+PINコード(パスワード)で
-  // 「店舗共通アカウント」を1つ作成しておき、スタッフはPINコードだけを入力する。
+  // 店舗別PINコード方式のログイン。
+  // Firebase Authenticationに、店舗ごとのダミーメールアドレス+PINコード(パスワード)で
+  // 「店舗専用アカウント」を用意しておき、スタッフは自店舗のPINコードだけを入力する。
   // 実際のPIN照合はFirebaseの認証サーバー側で行われるため、公開されるJSソースに
   // 正しいPINが含まれることはない。
-  const SHARED_LOGIN_EMAIL = 'staff@kinko-app-2f5e4.local';
+  // どの店舗のPINかは事前にはわからないため、入力されたPINでオーナー→各店舗の順に
+  // サインインを試し、一致したアカウントで自動的に店舗(またはオーナー権限)を確定する。
+  const OWNER_LOGIN_EMAIL = 'owner-493dbedc@kinko-app-2f5e4.local';
+
+  async function loadStoreLoginDirectory() {
+    if (storeLoginDirectory) return storeLoginDirectory;
+    try {
+      const doc = await db.collection('meta').doc('storeLoginDirectory').get();
+      storeLoginDirectory = (doc.exists && doc.data()) || {};
+    } catch (err) {
+      storeLoginDirectory = {};
+    }
+    if (!storeLoginDirectory.stores) storeLoginDirectory.stores = {};
+    return storeLoginDirectory;
+  }
+
+  async function resolveSessionRole() {
+    const dir = await loadStoreLoginDirectory();
+    const email = currentUser && currentUser.email;
+    if (email === OWNER_LOGIN_EMAIL) {
+      isOwnerSession = true;
+      lockedStoreId = null;
+      return;
+    }
+    isOwnerSession = false;
+    const matchedId = Object.keys(dir.stores).find(id => dir.stores[id] === email);
+    lockedStoreId = matchedId || null;
+    if (lockedStoreId) {
+      currentStoreId = lockedStoreId;
+      localStorage.setItem('kinko_selected_store_id', currentStoreId);
+    }
+  }
 
   async function handleLoginSubmit(e) {
     e.preventDefault();
@@ -816,10 +855,22 @@ if (navigator.storage && navigator.storage.persist) {
       errEl.textContent = 'Firebase設定が未完了です。';
       return;
     }
+
+    showLoading('認証中...');
     try {
-      await auth.signInWithEmailAndPassword(SHARED_LOGIN_EMAIL, pin);
-    } catch (err) {
+      const dir = await loadStoreLoginDirectory();
+      const candidateEmails = [OWNER_LOGIN_EMAIL, ...Object.values(dir.stores)];
+      for (const email of candidateEmails) {
+        try {
+          await auth.signInWithEmailAndPassword(email, pin);
+          return; // 成功。以降はonAuthStateChangedが処理する
+        } catch (err) {
+          // このアカウントのPINとは一致しなかった。次の候補を試す
+        }
+      }
       errEl.textContent = 'PINコードが正しくありません。';
+    } finally {
+      hideLoading();
     }
   }
 
@@ -846,15 +897,20 @@ if (navigator.storage && navigator.storage.persist) {
         globalStoreList = storeMasterDoc.data().stores;
       } else {
         globalStoreList = [{ id: 'store_default', name: '1号店', target: 200000 }];
-        await db.collection('meta').doc('storeMaster').set({ stores: globalStoreList });
+        if (isOwnerSession) {
+          await db.collection('meta').doc('storeMaster').set({ stores: globalStoreList });
+        }
       }
 
-      if (!currentStoreId || !globalStoreList.some(s => s.id === currentStoreId)) {
+      if (lockedStoreId) {
+        currentStoreId = lockedStoreId;
+      } else if (!currentStoreId || !globalStoreList.some(s => s.id === currentStoreId)) {
         currentStoreId = globalStoreList[0].id;
         localStorage.setItem('kinko_selected_store_id', currentStoreId);
       }
 
-      const storeObj = globalStoreList.find(s => s.id === currentStoreId);
+      const storeObj = globalStoreList.find(s => s.id === currentStoreId) ||
+        { id: currentStoreId, name: currentStoreId, target: 200000 };
       currentStoreName = storeObj.name;
       targetVaultAmount = storeObj.target || 200000;
 
@@ -881,6 +937,10 @@ if (navigator.storage && navigator.storage.persist) {
     document.getElementById('target-amount-disp').textContent = targetVaultAmount.toLocaleString();
     document.getElementById('master-target').value = targetVaultAmount.toLocaleString() + '円';
     document.getElementById('staff-master-store-label').textContent = `【${currentStoreName}】`;
+
+    document.getElementById('owner-store-settings-card').style.display = isOwnerSession ? '' : 'none';
+    document.getElementById('locked-store-notice').style.display = isOwnerSession ? 'none' : '';
+    document.getElementById('locked-store-notice-name').textContent = currentStoreName;
   }
 
   function renderStaffDropdowns() {
