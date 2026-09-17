@@ -361,6 +361,7 @@
     <!-- 1. 金庫内現金実査エリア -->
     <div class="section-card">
       <div class="section-title">【1】金庫内現金実査</div>
+      <div id="prev-vault-info" style="font-size: 0.78rem; color: #555; background: #f5f7fa; border: 1px solid #ddd; border-radius: 4px; padding: 6px 8px; margin-bottom: 10px; line-height: 1.5;"></div>
       <table>
         <thead>
           <tr><th>金種</th><th>区分 / 数量</th><th>金額</th></tr>
@@ -368,57 +369,57 @@
         <tbody>
           <tr>
             <td class="label-col">10,000円札</td>
-            <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="bill" data-unit="10000" id="bill-10000" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">5,000円札</td>
-            <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="bill" data-unit="5000" id="bill-5000" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">2,000円札</td>
-            <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="bill" data-unit="2000" id="bill-2000" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">1,000円札</td>
-            <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="bill1000" data-unit="1000" id="bill-1000" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">500円玉 (10枚単位)</td>
-            <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="coin500" data-unit="500" id="coin-500" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">100円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="100" id="roll-100" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="roll" data-unit="100" id="roll-100" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">50円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="50" id="roll-50" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="roll" data-unit="50" id="roll-50" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">10円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="10" id="roll-10" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="roll" data-unit="10" id="roll-10" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">5円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="5" id="roll-5" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="roll" data-unit="5" id="roll-5" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">1円棒金</td>
-            <td><select class="select-count" data-type="roll" data-unit="1" id="roll-1" onchange="saveFormState(); calculate();"></select></td>
+            <td><select class="select-count" data-type="roll" data-unit="1" id="roll-1" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span class="subtotal">0</span> 円</td>
           </tr>
           <tr>
             <td class="label-col">硬貨バラ（各種）</td>
-            <td><select id="loose-coins" onchange="saveFormState(); calculate();"></select></td>
+            <td><select id="loose-coins" onchange="vaultTouched = true; saveFormState(); calculate();"></select></td>
             <td class="num-col"><span id="loose-subtotal">0</span> 円</td>
           </tr>
         </tbody>
@@ -470,11 +471,11 @@
         <div class="coupon-grid">
           <div class="field-group">
             <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-            <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
+            <select id="reg1-free-coupon" class="coupon-select highlight-ok" onchange="reg1Touched = true; saveFormState(); updateHighlights();"></select>
           </div>
           <div class="field-group">
             <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-            <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
+            <select id="reg1-disc-coupon" class="coupon-select highlight-ok" onchange="reg1Touched = true; saveFormState(); updateHighlights();"></select>
           </div>
         </div>
 
@@ -505,11 +506,11 @@
         <div class="coupon-grid">
           <div class="field-group">
             <label>無料券過不足 <span class="help-icon" onclick="openHelpModal('無料券過不足の考え方')">?</span></label>
-            <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
+            <select id="reg2-free-coupon" class="coupon-select highlight-ok" onchange="reg2Touched = true; saveFormState(); updateHighlights();"></select>
           </div>
           <div class="field-group">
             <label>割引券過不足 <span class="help-icon" onclick="openHelpModal('割引券過不足の考え方')">?</span></label>
-            <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="saveFormState(); updateHighlights();"></select>
+            <select id="reg2-disc-coupon" class="coupon-select highlight-ok" onchange="reg2Touched = true; saveFormState(); updateHighlights();"></select>
           </div>
         </div>
 
@@ -757,6 +758,12 @@ if (navigator.storage && navigator.storage.persist) {
 
 <script>
   let currentUser = null;
+  // 金庫内現金実査・各レジ過不足欄に、この読み込み以降で実際に触れたかどうか。
+  // 未入力のまま(初期値の0)で過不足・差分を計算してしまうと、数えていないのに
+  // 過不足が発生したかのような嘘の数字が表示・保存されてしまうため、区別している。
+  let vaultTouched = false;
+  let reg1Touched = false;
+  let reg2Touched = false;
   let isOwnerSession = false;
   let lockedStoreId = null; // 店舗専用PINでログインした場合、その店舗のIDが入る(店舗切替不可)
 
@@ -1048,7 +1055,10 @@ if (navigator.storage && navigator.storage.persist) {
       'reg2-diff': document.getElementById('reg2-diff').value,
       'reg2-free-coupon': document.getElementById('reg2-free-coupon').value,
       'reg2-disc-coupon': document.getElementById('reg2-disc-coupon').value,
-      'memo': document.getElementById('memo').value
+      'memo': document.getElementById('memo').value,
+      'vaultTouched': vaultTouched,
+      'reg1Touched': reg1Touched,
+      'reg2Touched': reg2Touched
     };
     localStorage.setItem('kinko_form_state_' + currentStoreName, JSON.stringify(state));
   }
@@ -1082,6 +1092,9 @@ if (navigator.storage && navigator.storage.persist) {
       if (state['reg2-free-coupon']) document.getElementById('reg2-free-coupon').value = state['reg2-free-coupon'];
       if (state['reg2-disc-coupon']) document.getElementById('reg2-disc-coupon').value = state['reg2-disc-coupon'];
       if (state['memo']) document.getElementById('memo').value = state['memo'];
+      vaultTouched = !!state['vaultTouched'];
+      reg1Touched = !!state['reg1Touched'];
+      reg2Touched = !!state['reg2Touched'];
       updateHighlights();
     } catch (e) {
       console.error('State load error', e);
@@ -1104,14 +1117,21 @@ if (navigator.storage && navigator.storage.persist) {
     document.getElementById('loose-subtotal').textContent = looseVal.toLocaleString();
     total += looseVal;
 
-    document.getElementById('total-amount').textContent = total.toLocaleString();
-
-    const diff = total - targetVaultAmount;
     const diffContainer = document.getElementById('diff-container');
     const diffAmountEl = document.getElementById('diff-amount');
 
-    diffAmountEl.textContent = (diff > 0 ? '+' : '') + diff.toLocaleString();
-    diffContainer.className = diff === 0 ? 'summary-row diff highlight-ok' : 'summary-row diff highlight-ng';
+    if (!vaultTouched) {
+      // まだ一つも実査欄が入力されていない状態。0を数えた結果と区別するため、
+      // 過不足を計算せず「未入力」であることが分かる表示にする。
+      document.getElementById('total-amount').textContent = '—(未入力)';
+      diffAmountEl.textContent = '—';
+      diffContainer.className = 'summary-row diff';
+    } else {
+      document.getElementById('total-amount').textContent = total.toLocaleString();
+      const diff = total - targetVaultAmount;
+      diffAmountEl.textContent = (diff > 0 ? '+' : '') + diff.toLocaleString();
+      diffContainer.className = diff === 0 ? 'summary-row diff highlight-ok' : 'summary-row diff highlight-ng';
+    }
 
     updateHighlights();
   }
@@ -1180,32 +1200,50 @@ if (navigator.storage && navigator.storage.persist) {
 
   let prevRegDisplaysRequestId = 0;
 
-  // 「前回の記録」情報と、現在入力中の値から「今回発生分(前回との差分)」をレジごとに表示する
+  // 「前回の記録」情報と、現在入力中の値から「今回発生分(前回との差分)」をレジごとに表示する。
+  // あわせて【1】金庫内現金実査にも前回の実査結果を参考表示する。
   async function refreshPrevRegDisplays() {
     const prevInfoEl = document.getElementById('prev-reg-info');
+    const prevVaultEl = document.getElementById('prev-vault-info');
     const dtEl = document.getElementById('datetime');
     if (!prevInfoEl || !dtEl) return;
     const dt = dtEl.value;
 
     const requestId = ++prevRegDisplaysRequestId;
     prevInfoEl.textContent = '📋 前回の記録を確認中...';
+    if (prevVaultEl) prevVaultEl.textContent = '📋 前回の記録を確認中...';
     const prevRecord = await fetchPreviousRecordFromFirestore(dt);
     if (requestId !== prevRegDisplaysRequestId) return; // 後から発行された新しいリクエストの結果を優先する
 
     if (!prevRecord) {
       prevInfoEl.textContent = '📋 前回の記録: なし(この店舗で最初の記録です)';
+      if (prevVaultEl) prevVaultEl.textContent = '📋 前回の記録: なし(この店舗で最初の記録です)';
     } else {
       const timeStr = prevRecord.datetime.replace('T', ' ');
       prevInfoEl.innerHTML =
         `📋 前回の記録(${timeStr})<br>` +
         `・1レジ${prevRecord.reg1.staff ? '(' + prevRecord.reg1.staff + ')' : ''}: 現金${prevRecord.reg1.cashDiff} / 無料${prevRecord.reg1.freeCouponDiff}枚 / 割引${prevRecord.reg1.discCouponDiff}枚<br>` +
         `・2レジ${prevRecord.reg2.staff ? '(' + prevRecord.reg2.staff + ')' : ''}: 現金${prevRecord.reg2.cashDiff} / 無料${prevRecord.reg2.freeCouponDiff}枚 / 割引${prevRecord.reg2.discCouponDiff}枚`;
+      if (prevVaultEl) {
+        prevVaultEl.textContent =
+          `📋 前回の記録(${timeStr})　実査合計 ${prevRecord.vaultTotal}円 / 設定金額 ${Number(prevRecord.vaultTarget).toLocaleString()}円 / 過不足 ${prevRecord.vaultDiff}円`;
+      }
     }
 
     const fmt = v => (v > 0 ? '+' : '') + v.toLocaleString();
+    const regTouched = { reg1: reg1Touched, reg2: reg2Touched };
     ['reg1', 'reg2'].forEach(regKey => {
       const previewEl = document.getElementById(regKey + '-delta-preview');
       if (!previewEl) return;
+
+      if (!regTouched[regKey]) {
+        // このレジの過不足・クーポン欄が一つも入力されていない。前回値との差分を
+        // 計算すると「未入力(=0)」を実際の変化と誤認してしまうため、計算自体を行わない。
+        previewEl.textContent = '→ 今回発生分: —(未入力)';
+        previewEl.style.color = '#555';
+        return;
+      }
+
       const prevReg = prevRecord ? prevRecord[regKey] : null;
       const cashDelta = parseAmountVal(document.getElementById(regKey + '-diff').value) - parseAmountVal(prevReg && prevReg.cashDiff);
       const freeDelta = parseAmountVal(document.getElementById(regKey + '-free-coupon').value) - parseAmountVal(prevReg && prevReg.freeCouponDiff);
@@ -1254,6 +1292,8 @@ if (navigator.storage && navigator.storage.persist) {
       document.getElementById('reg2-diff').value = '0円';
       document.querySelectorAll('.coupon-select').forEach(s => s.value = 0);
       document.getElementById('memo').value = '';
+      reg1Touched = false;
+      reg2Touched = false;
       saveFormState();
       updateHighlights();
     }
@@ -1267,6 +1307,16 @@ if (navigator.storage && navigator.storage.persist) {
     if (!staff1 && !staff2) {
       alert('担当者名を少なくとも1名選択してください。');
       return;
+    }
+
+    if (!vaultTouched) {
+      alert('金庫内現金実査を入力してから保存してください。');
+      return;
+    }
+    if (parseAmountVal(document.getElementById('total-amount').textContent) === 0) {
+      if (!confirm('実査合計が0円です。本当に金庫が空ですか？\n(数え忘れの場合は「いいえ」を選んで入力してください)')) {
+        return;
+      }
     }
 
     lastSavedRecord = {
@@ -1296,11 +1346,15 @@ if (navigator.storage && navigator.storage.persist) {
     // ローカルキャッシュ(globalRecords)は他端末の保存内容を反映していない場合があるため、
     // 保存直前にFirestoreへ直接問い合わせて最新の前回記録を取得する。
     const prevRecord = await fetchPreviousRecordFromFirestore(lastSavedRecord.datetime);
+    const regTouchedAtSave = { reg1: reg1Touched, reg2: reg2Touched };
     ['reg1', 'reg2'].forEach(regKey => {
       const prevReg = prevRecord ? prevRecord[regKey] : null;
       ['cashDiff', 'freeCouponDiff', 'discCouponDiff'].forEach(field => {
-        lastSavedRecord[regKey][field + 'Delta'] =
-          parseAmountVal(lastSavedRecord[regKey][field]) - parseAmountVal(prevReg && prevReg[field]);
+        // このレジの欄が一つも入力されていない場合、「未入力(=0)」と前回値との差を
+        // 実際に発生した過不足として記録してしまわないよう、今回発生分は0とする。
+        lastSavedRecord[regKey][field + 'Delta'] = regTouchedAtSave[regKey]
+          ? parseAmountVal(lastSavedRecord[regKey][field]) - parseAmountVal(prevReg && prevReg[field])
+          : 0;
       });
     });
 
@@ -1702,6 +1756,8 @@ if (navigator.storage && navigator.storage.persist) {
     const rawVal = parseInt(document.getElementById('numpad-display').textContent, 10) || 0;
     document.getElementById(currentTargetInputId).value = rawVal.toLocaleString() + '円';
     document.getElementById('numpad-modal').style.display = 'none';
+    if (currentTargetInputId === 'reg1-diff') reg1Touched = true;
+    if (currentTargetInputId === 'reg2-diff') reg2Touched = true;
     saveFormState();
     updateHighlights();
   }
