@@ -772,11 +772,15 @@ if (navigator.storage && navigator.storage.persist) {
   let storeLoginDirectory = null; // { stores: { [storeId]: loginEmail } }
   let lastSavedRecord = null;
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function setDatetimeToNow() {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('datetime').value = now.toISOString().slice(0, 16);
-    document.getElementById('archive-date').value = now.toISOString().slice(0, 10);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setDatetimeToNow();
+    document.getElementById('archive-date').value = document.getElementById('datetime').value.slice(0, 10);
 
     initDropdowns();
 
@@ -1036,7 +1040,6 @@ if (navigator.storage && navigator.storage.persist) {
       'roll-5': document.querySelectorAll('select[data-type="roll"]')[3].value,
       'roll-1': document.querySelectorAll('select[data-type="roll"]')[4].value,
       'loose-coins': document.getElementById('loose-coins').value,
-      'datetime': document.getElementById('datetime').value,
       'reg1-staff': document.getElementById('reg1-staff').value,
       'reg1-diff': document.getElementById('reg1-diff').value,
       'reg1-free-coupon': document.getElementById('reg1-free-coupon').value,
@@ -1067,7 +1070,9 @@ if (navigator.storage && navigator.storage.persist) {
       if (state['roll-5']) rolls[3].value = state['roll-5'];
       if (state['roll-1']) rolls[4].value = state['roll-1'];
       if (state['loose-coins']) document.getElementById('loose-coins').value = state['loose-coins'];
-      if (state['datetime']) document.getElementById('datetime').value = state['datetime'];
+      // 点検日時は復元しない: 前回入力時の古い日時がキャッシュされ続けて
+      // 「日時が更新されない」ように見える不具合の原因だったため、
+      // 常にページ読み込み時点の現在時刻(setDatetimeToNow)を使う。
       if (state['reg1-staff']) document.getElementById('reg1-staff').value = state['reg1-staff'];
       if (state['reg1-diff']) document.getElementById('reg1-diff').value = state['reg1-diff'];
       if (state['reg1-free-coupon']) document.getElementById('reg1-free-coupon').value = state['reg1-free-coupon'];
