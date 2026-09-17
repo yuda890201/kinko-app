@@ -524,6 +524,9 @@
       <textarea id="memo" rows="2" placeholder="過不足の理由など" oninput="saveFormState()"></textarea>
     </div>
 
+    <div id="save-store-confirm" style="text-align: center; font-size: 0.95rem; font-weight: bold; margin-bottom: 6px; padding: 6px; background: #fff3cd; border: 1px solid #ffe08a; border-radius: 4px;">
+      「<span id="save-store-confirm-name"></span>」の点検として保存します
+    </div>
     <div class="btn-group">
       <button class="btn-main btn-reset" onclick="resetRegisterOnly()">レジ状況クリア</button>
       <button class="btn-main btn-submit" id="submit-btn" onclick="submitRecordOnly()">① 記録を保存する</button>
@@ -828,6 +831,22 @@ if (navigator.storage && navigator.storage.persist) {
   // サインインを試し、一致したアカウントで自動的に店舗(またはオーナー権限)を確定する。
   const OWNER_LOGIN_EMAIL = 'owner-493dbedc@kinko-app-2f5e4.local';
 
+  // 店舗コミュニケーションアプリなど外部アプリから、開くべき店舗をURLの
+  // #store=<店舗名(encodeURIComponent済み)> で指定できるようにする。
+  // クエリではなくハッシュにしているのは、サーバーに送信されずログにも残らないため。
+  // 一度読み取ったら history.replaceState でURLから消し、以後の再読み込みでは
+  // 前回選択していた店舗(localStorage)に戻るようにする。
+  function consumeStoreNameFromUrlHash() {
+    const match = location.hash.match(/(?:^#|&)store=([^&]+)/);
+    if (!match) return null;
+    history.replaceState(null, '', location.pathname + location.search);
+    try {
+      return decodeURIComponent(match[1]);
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function loadStoreLoginDirectory() {
     if (storeLoginDirectory) return storeLoginDirectory;
     try {
@@ -914,10 +933,24 @@ if (navigator.storage && navigator.storage.persist) {
       }
 
       if (lockedStoreId) {
+        // 店舗専用PINでログインしている場合、対象店舗はPINの時点で確定しているため、
+        // URLでの指定があっても無視する(他店舗のデータに触れさせないため)。
         currentStoreId = lockedStoreId;
-      } else if (!currentStoreId || !globalStoreList.some(s => s.id === currentStoreId)) {
-        currentStoreId = globalStoreList[0].id;
-        localStorage.setItem('kinko_selected_store_id', currentStoreId);
+      } else {
+        const requestedStoreName = consumeStoreNameFromUrlHash();
+        if (requestedStoreName) {
+          const requestedStore = globalStoreList.find(s => s.name === requestedStoreName);
+          if (requestedStore) {
+            currentStoreId = requestedStore.id;
+            localStorage.setItem('kinko_selected_store_id', currentStoreId);
+          } else {
+            alert(`指定された店舗が見つかりません: 「${requestedStoreName}」`);
+          }
+        }
+        if (!currentStoreId || !globalStoreList.some(s => s.id === currentStoreId)) {
+          currentStoreId = globalStoreList[0].id;
+          localStorage.setItem('kinko_selected_store_id', currentStoreId);
+        }
       }
 
       const storeObj = globalStoreList.find(s => s.id === currentStoreId) ||
@@ -945,6 +978,7 @@ if (navigator.storage && navigator.storage.persist) {
 
   function updateStoreUI() {
     document.getElementById('current-store-badge').textContent = currentStoreName;
+    document.getElementById('save-store-confirm-name').textContent = currentStoreName;
     document.getElementById('target-amount-disp').textContent = targetVaultAmount.toLocaleString();
     document.getElementById('master-target').value = targetVaultAmount.toLocaleString() + '円';
     document.getElementById('staff-master-store-label').textContent = `【${currentStoreName}】`;
@@ -1319,6 +1353,13 @@ if (navigator.storage && navigator.storage.persist) {
       }
     }
 
+    // 別の店舗が選択された状態のまま保存してしまう事故(店舗コミュニケーションアプリ経由で
+    // 開いた際に、前回開いていた店舗が残っていた等)を防ぐため、保存の直前に必ず
+    // 店舗名を確認させる。
+    if (!confirm(`「${currentStoreName}」の点検として保存します。よろしいですか？`)) {
+      return;
+    }
+
     lastSavedRecord = {
       datetime: document.getElementById('datetime').value,
       storeId: currentStoreId,
@@ -1371,7 +1412,7 @@ if (navigator.storage && navigator.storage.persist) {
       hideLoading();
 
       document.getElementById('share-btn-container').style.display = 'block';
-      alert('スプレッドシートへの保存が完了しました！\n下の「② A4公式帳票レポート画像を共有・保存」ボタンを押してください。');
+      alert('記録の保存が完了しました！\n下の「② A4公式帳票レポート画像を共有・保存」ボタンを押してください。');
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
     } catch (err) {
