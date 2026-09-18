@@ -809,8 +809,18 @@ if (navigator.storage && navigator.storage.persist) {
         }
         currentUser = user;
         if (user) {
-          document.getElementById('login-overlay').style.display = 'none';
-          resolveSessionRole().then(fetchData);
+          resolveSessionRole().then(recognized => {
+            if (recognized) {
+              document.getElementById('login-overlay').style.display = 'none';
+              fetchData();
+            } else {
+              // オーナーでも、どの店舗の専用アカウントでもない(以前の認証方式からの
+              // 古いセッションなど)。読み取りはできるが書き込みができない中途半端な
+              // 状態のまま使わせてしまうと、保存時に権限エラーになるまで気づけない。
+              // 正規のログインとして扱わず、サインアウトしてPIN入力からやり直させる。
+              auth.signOut();
+            }
+          });
         } else {
           isOwnerSession = false;
           lockedStoreId = null;
@@ -859,13 +869,16 @@ if (navigator.storage && navigator.storage.persist) {
     return storeLoginDirectory;
   }
 
+  // オーナー、またはstoreLoginDirectoryに登録されている店舗専用アカウントかどうかを判定する。
+  // 戻り値がfalseの場合、書き込み権限を一切持たない未登録アカウント(例えば、店舗別PIN方式
+  // 導入前の古い共通アカウントのセッションが端末に残っているケース)であることを意味する。
   async function resolveSessionRole() {
     const dir = await loadStoreLoginDirectory();
     const email = currentUser && currentUser.email;
     if (email === OWNER_LOGIN_EMAIL) {
       isOwnerSession = true;
       lockedStoreId = null;
-      return;
+      return true;
     }
     isOwnerSession = false;
     const matchedId = Object.keys(dir.stores).find(id => dir.stores[id] === email);
@@ -873,7 +886,9 @@ if (navigator.storage && navigator.storage.persist) {
     if (lockedStoreId) {
       currentStoreId = lockedStoreId;
       localStorage.setItem('kinko_selected_store_id', currentStoreId);
+      return true;
     }
+    return false;
   }
 
   async function handleLoginSubmit(e) {
