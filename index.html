@@ -1348,6 +1348,24 @@ if (navigator.storage && navigator.storage.persist) {
     }
   }
 
+  // 金庫内現金実査(【1】)の内訳を、金種ごとの数量・小計として取得する。
+  // A4帳票への表示と、記録保存時の内訳データ(vaultBreakdown)の両方で使う。
+  function buildVaultBreakdownRows() {
+    return [
+      { label: '10,000円札', count: document.getElementById('bill-10000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[0].textContent },
+      { label: '5,000円札', count: document.getElementById('bill-5000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[1].textContent },
+      { label: '2,000円札', count: document.getElementById('bill-2000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[2].textContent },
+      { label: '1,000円札', count: document.getElementById('bill-1000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[3].textContent },
+      { label: '500円玉 (10枚単位)', count: document.getElementById('coin-500').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[4].textContent },
+      { label: '100円棒金', count: document.querySelectorAll('select[data-type="roll"]')[0].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[5].textContent },
+      { label: '50円棒金', count: document.querySelectorAll('select[data-type="roll"]')[1].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[6].textContent },
+      { label: '10円棒金', count: document.querySelectorAll('select[data-type="roll"]')[2].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[7].textContent },
+      { label: '5円棒金', count: document.querySelectorAll('select[data-type="roll"]')[3].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[8].textContent },
+      { label: '1円棒金', count: document.querySelectorAll('select[data-type="roll"]')[4].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[9].textContent },
+      { label: '硬貨バラ（各種）', count: document.getElementById('loose-coins').selectedOptions[0].text, sub: document.getElementById('loose-subtotal').textContent }
+    ];
+  }
+
   async function submitRecordOnly() {
     if (!currentUser) return;
     const staff1 = document.getElementById('reg1-staff').value;
@@ -1394,6 +1412,10 @@ if (navigator.storage && navigator.storage.persist) {
       vaultTotal: document.getElementById('total-amount').textContent,
       vaultTarget: targetVaultAmount,
       vaultDiff: document.getElementById('diff-amount').textContent,
+      // 責任者が両替に行く際などに金種の内訳を確認できるよう、合計だけでなく
+      // 金種ごとの数量・小計も保存する(店舗コミュニケーションアプリのオーナー
+      // 設定画面での表示用)。
+      vaultBreakdown: buildVaultBreakdownRows(),
       memo: document.getElementById('memo').value
     };
 
@@ -1450,19 +1472,9 @@ if (navigator.storage && navigator.storage.persist) {
       const vaultTbody = document.getElementById('rep-vault-tbody');
       vaultTbody.innerHTML = '';
       
-      const rowsData = [
-        { label: '10,000円札', count: document.getElementById('bill-10000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[0].textContent },
-        { label: '5,000円札', count: document.getElementById('bill-5000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[1].textContent },
-        { label: '2,000円札', count: document.getElementById('bill-2000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[2].textContent },
-        { label: '1,000円札', count: document.getElementById('bill-1000').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[3].textContent },
-        { label: '500円玉 (10枚単位)', count: document.getElementById('coin-500').selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[4].textContent },
-        { label: '100円棒金', count: document.querySelectorAll('select[data-type="roll"]')[0].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[5].textContent },
-        { label: '50円棒金', count: document.querySelectorAll('select[data-type="roll"]')[1].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[6].textContent },
-        { label: '10円棒金', count: document.querySelectorAll('select[data-type="roll"]')[2].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[7].textContent },
-        { label: '5円棒金', count: document.querySelectorAll('select[data-type="roll"]')[3].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[8].textContent },
-        { label: '1円棒金', count: document.querySelectorAll('select[data-type="roll"]')[4].selectedOptions[0].text, sub: document.querySelectorAll('.subtotal')[9].textContent },
-        { label: '硬貨バラ（各種）', count: document.getElementById('loose-coins').selectedOptions[0].text, sub: document.getElementById('loose-subtotal').textContent }
-      ];
+      // 保存時点のスナップショット(vaultBreakdown)を使うことで、保存後に画面の値が
+      // 変わっていても実際に保存された内容通りの帳票になるようにする。
+      const rowsData = lastSavedRecord.vaultBreakdown || buildVaultBreakdownRows();
 
       rowsData.forEach(r => {
         const tr = document.createElement('tr');
